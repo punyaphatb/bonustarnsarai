@@ -2,235 +2,244 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPR Assistant Pro & Knowledge</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CPR Assistant Pro</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-slate-900 text-white font-sans min-h-screen flex flex-col justify-between p-4 select-none">
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col justify-between p-4 select-none antialiased">
 
-    <div id="login-screen" class="flex-1 flex flex-col justify-center items-center gap-4 max-w-sm mx-auto w-full">
-        <div class="text-center mb-2">
-            <h1 class="text-3xl font-black text-amber-500 flex items-center justify-center gap-2 mb-1">
-                <i data-lucide="heart-pulse" class="w-10 h-10 animate-pulse"></i> CPR Pro
-            </h1>
-            <p class="text-xs text-slate-400">เข้าสู่ระบบสมาชิกเพื่อบันทึกข้อมูลการทดสอบ</p>
+    <!-- ========================================== -->
+    <!-- หน้าเข้าสู่ระบบ (LOGIN SCREEN) -->
+    <!-- ========================================== -->
+    <div id="login-screen" class="flex-1 flex flex-col justify-center items-center gap-6 max-w-sm mx-auto w-full page-transition">
+        <div class="text-center">
+            <div class="inline-flex p-4 bg-amber-500/10 rounded-3xl text-amber-500 mb-3 animate-glow">
+                <i data-lucide="heart-pulse" class="w-12 h-12"></i>
+            </div>
+            <h1 class="text-3xl font-black tracking-tight bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">CPR Pro Assistant</h1>
+            <p class="text-xs text-slate-400 mt-1">ระบบดักจับความเร็วและองศาการกู้ชีพแบบเรียลไทม์</p>
         </div>
 
-        <form id="form-login" class="w-full space-y-3 bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
+        <form id="form-login" class="w-full space-y-4 glass-panel p-6 rounded-3xl shadow-2xl shadow-black/50">
             <div>
-                <label class="block text-xs text-slate-400 mb-1">อีเมล (Email)</label>
-                <input type="email" id="login-email" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500 text-white" placeholder="your@email.com">
+                <label class="block text-xs font-semibold text-slate-400 mb-1.5 tracking-wide uppercase">อีเมล (Email)</label>
+                <input type="email" id="login-email" required class="w-full bg-slate-900/90 border border-slate-700/50 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-white transition-all" placeholder="name@example.com">
             </div>
             <div>
-                <label class="block text-xs text-slate-400 mb-1">รหัสผ่าน (Password)</label>
-                <input type="password" id="login-password" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500 text-white" placeholder="••••••••">
+                <label class="block text-xs font-semibold text-slate-400 mb-1.5 tracking-wide uppercase">รหัสผ่าน (Password)</label>
+                <input type="password" id="login-password" required class="w-full bg-slate-900/90 border border-slate-700/50 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-white transition-all" placeholder="••••••••">
             </div>
-            <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-bold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-amber-950/50">
-                เข้าสู่ระบบ
+            <button type="submit" class="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 active:scale-95 text-slate-950 font-black py-3.5 rounded-2xl text-sm transition-all shadow-xl shadow-amber-950/20 mt-2">
+                เข้าสู่ระบบใช้งาน
             </button>
         </form>
 
         <p class="text-xs text-slate-400">
-            ยังไม่มีบัญชีผู้ใช้? <button id="go-to-register" class="text-amber-500 font-bold hover:underline">สมัครสมาชิกที่นี่</button>
+            ยังไม่มีบัญชีผู้ใช้? <button id="go-to-register" class="text-amber-400 font-bold hover:underline">สมัครสมาชิกฟรีที่นี่</button>
         </p>
     </div>
 
-    <div id="register-screen" class="hidden flex-1 flex flex-col justify-center items-center gap-4 max-w-sm mx-auto w-full">
-        <div class="text-center mb-2">
-            <h1 class="text-2xl font-black text-amber-500 flex items-center justify-center gap-2 mb-1">
-                <i data-lucide="user-plus" class="w-8 h-8"></i> สมัครสมาชิกใหม่
-            </h1>
-            <p class="text-xs text-slate-400">สร้างบัญชีผู้ใช้ของคุณเพื่อเริ่มต้นเก็บสถิติ</p>
+    <!-- ========================================== -->
+    <!-- หน้าสมัครสมาชิก (REGISTER SCREEN) -->
+    <!-- ========================================== -->
+    <div id="register-screen" class="hidden flex-1 flex flex-col justify-center items-center gap-6 max-w-sm mx-auto w-full page-transition">
+        <div class="text-center">
+            <div class="inline-flex p-4 bg-emerald-500/10 rounded-3xl text-emerald-400 mb-3">
+                <i data-lucide="user-plus" class="w-10 h-10"></i>
+            </div>
+            <h1 class="text-2xl font-black tracking-tight text-emerald-400">สร้างบัญชีใหม่</h1>
+            <p class="text-xs text-slate-400 mt-1">เริ่มต้นเก็บข้อมูลและสถิติการฝึกซ้อมของคุณ</p>
         </div>
 
-        <form id="form-register" class="w-full space-y-3 bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
+        <form id="form-register" class="w-full space-y-4 glass-panel p-6 rounded-3xl shadow-2xl shadow-black/50">
             <div>
-                <label class="block text-xs text-slate-400 mb-1">ชื่อผู้ใช้งาน (Display Name)</label>
-                <input type="text" id="reg-name" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500 text-white" placeholder="ชื่อของคุณ">
+                <label class="block text-xs font-semibold text-slate-400 mb-1.5 tracking-wide uppercase">ชื่อผู้ใช้งาน (Display Name)</label>
+                <input type="text" id="reg-name" required class="w-full bg-slate-900/90 border border-slate-700/50 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-white transition-all" placeholder="สมชาย สายลุย">
             </div>
             <div>
-                <label class="block text-xs text-slate-400 mb-1">อีเมล (Email)</label>
-                <input type="email" id="reg-email" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500 text-white" placeholder="example@email.com">
+                <label class="block text-xs font-semibold text-slate-400 mb-1.5 tracking-wide uppercase">อีเมล (Email)</label>
+                <input type="email" id="reg-email" required class="w-full bg-slate-900/90 border border-slate-700/50 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-white transition-all" placeholder="name@example.com">
             </div>
             <div>
-                <label class="block text-xs text-slate-400 mb-1">รหัสผ่าน (Password - อย่างน้อย 6 ตัว)</label>
-                <input type="password" id="reg-password" required minlength="6" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500 text-white" placeholder="••••••••">
+                <label class="block text-xs font-semibold text-slate-400 mb-1.5 tracking-wide uppercase">รหัสผ่าน (Password)</label>
+                <input type="password" id="reg-password" required minlength="6" class="w-full bg-slate-900/90 border border-slate-700/50 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-white transition-all" placeholder="อย่างน้อย 6 ตัวอักษร">
             </div>
-            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-emerald-950/50">
-                สร้างบัญชีผู้ใช้
+            <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 active:scale-95 text-slate-950 font-black py-3.5 rounded-2xl text-sm transition-all shadow-xl shadow-emerald-950/20 mt-2">
+                ลงทะเบียนสมาชิก
             </button>
         </form>
 
         <p class="text-xs text-slate-400">
-            มีบัญชีอยู่แล้ว? <button id="go-to-login" class="text-amber-500 font-bold hover:underline">กลับไปหน้าล็อกอิน</button>
+            มีบัญชีอยู่แล้ว? <button id="go-to-login" class="text-amber-400 font-bold hover:underline">กลับไปหน้าล็อกอิน</button>
         </p>
     </div>
 
-    <div id="app-screen" class="hidden flex-1 flex flex-col justify-between overflow-hidden">
+    <!-- ========================================== -->
+    <!-- หน้าจอหลักแอปพลิเคชัน (MAIN APP SCREEN) -->
+    <!-- ========================================== -->
+    <div id="app-screen" class="hidden flex-1 flex flex-col justify-between overflow-hidden page-transition max-w-md mx-auto w-full">
         
-        <header class="flex flex-col gap-2 py-2 border-b border-slate-800">
+        <!-- HEADER PROFILE -->
+        <header class="flex flex-col gap-3 py-3 border-b border-slate-900">
             <div class="flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-full bg-amber-500 text-slate-900 font-black flex items-center justify-center text-xs uppercase" id="user-avatar-fallback">U</div>
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-slate-950 font-black flex items-center justify-center text-sm shadow-md" id="user-avatar-fallback">U</div>
                     <div>
-                        <p id="user-name" class="text-xs font-bold text-slate-200">Loading...</p>
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">ผู้ใช้งานระบบ</p>
+                        <p id="user-name" class="text-sm font-bold text-white">Loading...</p>
                     </div>
                 </div>
-                <button id="btn-logout" class="text-[11px] text-rose-400 hover:text-rose-300 font-medium flex items-center gap-0.5">
-                    <i data-lucide="log-out" class="w-3 h-3"></i> ออกจากระบบ
+                <button id="btn-logout" class="text-xs text-rose-400 hover:text-rose-300 font-semibold bg-rose-500/10 px-3 py-1.5 rounded-xl transition-all flex items-center gap-1">
+                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i> ออก
                 </button>
             </div>
 
-            <div class="grid grid-cols-4 bg-slate-950 p-1 rounded-xl text-[11px] font-bold text-center">
-                <button id="tab-test" class="py-2 rounded-lg bg-slate-800 text-amber-500 transition-all flex flex-col items-center gap-0.5">
-                    <i data-lucide="activity" class="w-3.5 h-3.5"></i>ทดสอบ
+            <!-- เมนูนำทางแบบ GLASS 4 TABS -->
+            <div class="grid grid-cols-4 bg-slate-900/60 p-1 rounded-2xl text-[11px] font-bold text-center border border-slate-800/60 shadow-inner">
+                <button id="tab-test" class="py-2.5 rounded-xl bg-slate-800 text-amber-400 shadow-sm transition-all flex flex-col items-center gap-1">
+                    <i data-lucide="activity" class="w-4 h-4"></i>ทดสอบ
                 </button>
-                <button id="tab-dashboard" class="py-2 rounded-lg text-slate-400 transition-all flex flex-col items-center gap-0.5">
-                    <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>แดชบอร์ด
+                <button id="tab-dashboard" class="py-2.5 rounded-xl text-slate-400 hover:text-slate-200 transition-all flex flex-col items-center gap-1">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>แดชบอร์ด
                 </button>
-                <button id="tab-guide" class="py-2 rounded-lg text-slate-400 transition-all flex flex-col items-center gap-0.5">
-                    <i data-lucide="book-open" class="w-3.5 h-3.5"></i>วิธีใช้งาน
+                <button id="tab-guide" class="py-2.5 rounded-xl text-slate-400 hover:text-slate-200 transition-all flex flex-col items-center gap-1">
+                    <i data-lucide="book-open" class="w-4 h-4"></i>วิธีใช้งาน
                 </button>
-                <button id="tab-criteria" class="py-2 rounded-lg text-slate-400 transition-all flex flex-col items-center gap-0.5">
-                    <i data-lucide="award" class="w-3.5 h-3.5"></i>เกณฑ์ CPR
+                <button id="tab-criteria" class="py-2.5 rounded-xl text-slate-400 hover:text-slate-200 transition-all flex flex-col items-center gap-1">
+                    <i data-lucide="award" class="w-4 h-4"></i>เกณฑ์ CPR
                 </button>
             </div>
         </header>
 
-        <div id="page-test" class="flex-1 flex flex-col justify-center gap-3 my-2 overflow-y-auto pr-1">
-            <div class="bg-slate-800 rounded-2xl p-4 text-center shadow-md border border-slate-750">
-                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">ความเร็วการกด (BPM)</h2>
-                <div class="flex items-baseline justify-center gap-1">
-                    <span id="bpm-value" class="text-5xl font-black text-slate-500">0</span>
-                    <span class="text-sm text-slate-400 font-medium">ครั้ง/นาที</span>
+        <!-- SUB-PAGE 1: หน้าจอตรวจจับเซนเซอร์และการทดสอบ -->
+        <div id="page-test" class="flex-1 flex flex-col justify-center gap-4 my-4 overflow-y-auto pr-0.5">
+            <!-- BPM CARD -->
+            <div class="glass-panel rounded-3xl p-5 text-center shadow-lg relative overflow-hidden group">
+                <div class="absolute top-0 left-0 w-full h-1 bg-slate-800" id="bpm-top-bar"></div>
+                <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">ความเร็วการกดหน้าอก</h2>
+                <div class="flex items-baseline justify-center gap-1.5 my-2">
+                    <span id="bpm-value" class="text-6xl font-black text-slate-600 transition-all tracking-tighter">0</span>
+                    <span class="text-xs text-slate-400 font-bold uppercase">BPM</span>
                 </div>
-                <div class="mt-2 w-full bg-slate-700 rounded-full h-2 overflow-hidden">
-                    <div id="bpm-bar" class="bg-slate-500 h-full transition-all duration-300" style="width: 0%"></div>
+                <div class="w-full bg-slate-950 rounded-full h-2.5 p-0.5 border border-slate-800 overflow-hidden">
+                    <div id="bpm-bar" class="bg-slate-700 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
                 </div>
-                <p id="bpm-status" class="text-xs text-slate-400 mt-1">กำลังรอการทดสอบ...</p>
+                <p id="bpm-status" class="text-xs text-slate-400 mt-2 font-medium">ระบบพร้อมทำการตรวจสอบสัญญาณชีพบัญชี</p>
             </div>
 
-            <div class="bg-slate-800 rounded-2xl p-4 text-center shadow-md border border-slate-750">
-                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">มุมเอียงสัมพัทธ์</h2>
-                <div class="flex items-baseline justify-center">
-                    <span id="angle-value" class="text-4xl font-black text-slate-500">0°</span>
+            <!-- ANGLE CARD -->
+            <div class="glass-panel rounded-3xl p-5 text-center shadow-lg relative overflow-hidden">
+                <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">มุมเอียงแนวตั้งฉากสัมพัทธ์</h2>
+                <div class="flex items-baseline justify-center my-1">
+                    <span id="angle-value" class="text-5xl font-black text-slate-600 tracking-tighter">0°</span>
                 </div>
-                <div class="relative w-full h-8 flex items-center justify-center mt-1">
-                    <div class="w-0.5 h-6 bg-slate-600 absolute rounded"></div>
-                    <div id="angle-indicator" class="w-0.5 h-6 bg-slate-500 absolute rounded origin-center transition-transform duration-200" style="transform: rotate(0deg);"></div>
+                <div class="relative w-full h-10 flex items-center justify-center mt-2 bg-slate-950/50 rounded-2xl border border-slate-900">
+                    <div class="w-0.5 h-6 bg-slate-800 absolute rounded"></div>
+                    <div id="angle-indicator" class="w-1 h-6 bg-slate-600 absolute rounded-full origin-center transition-transform duration-200" style="transform: rotate(0deg);"></div>
                 </div>
-                <p id="angle-status" class="text-xs text-slate-400">มุมจะล็อกเซ็ตศูนย์ทันทีที่กดเริ่ม</p>
+                <p id="angle-status" class="text-xs text-slate-400 mt-2 font-medium">มุมจะถูกล็อกเทียบค่าศูนย์ทันทีที่เริ่ม</p>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <div class="bg-slate-800/50 rounded-xl p-3 text-center border border-slate-800">
-                    <span class="text-[11px] text-slate-400 block">นับการกดทั้งหมด</span>
-                    <span id="total-compressions" class="text-2xl font-bold text-white">0</span>
+            <!-- STATS GRID -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass-panel rounded-2xl p-3.5 text-center shadow-sm">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-0.5">กดหน้าอกสำเร็จ</span>
+                    <span id="total-compressions" class="text-3xl font-black text-white">0</span>
+                    <span class="text-[10px] text-slate-500 block">ครั้ง</span>
                 </div>
-                <div class="bg-slate-800/50 rounded-xl p-3 text-center border border-slate-800">
-                    <span class="text-[11px] text-slate-400 block">เวลาทดสอบ</span>
-                    <span id="timer" class="text-2xl font-bold text-white">00:00</span>
+                <div class="glass-panel rounded-2xl p-3.5 text-center shadow-sm">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-0.5">เวลาที่ใช้ไป</span>
+                    <span id="timer" class="text-3xl font-black text-white">00:00</span>
+                    <span class="text-[10px] text-slate-500 block">นาที:วินาที</span>
                 </div>
             </div>
 
-            <footer class="flex flex-col gap-2 mt-auto pt-2">
-                <button id="btn-action" class="w-full bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-bold py-3.5 px-6 rounded-xl text-md shadow-lg flex items-center justify-center gap-2 transition-all">
-                    <i data-lucide="play" fill="currentColor" class="w-5 h-5"></i> เริ่มการทดสอบความไวสูง
+            <!-- CONTROLS -->
+            <footer class="flex flex-col gap-3 mt-auto">
+                <button id="btn-action" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 active:scale-95 text-slate-950 font-black py-4 px-6 rounded-2xl text-md shadow-lg shadow-amber-950/20 flex items-center justify-center gap-2 transition-all tracking-wide">
+                    <i data-lucide="play" fill="currentColor" class="w-5 h-5"></i> เริ่มการทดสอบความละเอียดสูง
                 </button>
                 
-                <button id="btn-save-manual" class="hidden w-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black py-3 px-6 rounded-xl text-sm shadow-md flex items-center justify-center gap-2 transition-all border border-emerald-500/30 animate-bounce">
+                <button id="btn-save-manual" class="hidden w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-95 text-slate-950 font-black py-3.5 px-6 rounded-2xl text-sm shadow-xl flex items-center justify-center gap-2 transition-all border border-emerald-400/20 animate-bounce">
                     <i data-lucide="save" class="w-4 h-4"></i> บันทึกผลการทดสอบรอบนี้ลงคลาวด์
                 </button>
             </footer>
         </div>
 
-        <div id="page-dashboard" class="hidden flex-1 flex flex-col gap-3 my-2 overflow-hidden">
+        <!-- SUB-PAGE 2: หน้าจอ DASHBOARD ประวัติ -->
+        <div id="page-dashboard" class="hidden flex-1 flex flex-col gap-4 my-4 overflow-hidden">
             <div class="flex justify-between items-center">
-                <h2 class="text-md font-bold text-slate-200 flex items-center gap-1.5">
-                    <i data-lucide="history" class="text-amber-500 w-4 h-4"></i> ประวัติการทดสอบของคุณ
+                <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                    <i data-lucide="history" class="text-amber-500 w-4 h-4"></i> ประวัติเก็บสถิติส่วนบุคคล
                 </h2>
-                <span id="session-count" class="text-[11px] bg-slate-800 text-slate-400 px-2.5 py-0.5 rounded-full border border-slate-700">0 รายการ</span>
+                <span id="session-count" class="text-[10px] font-bold bg-slate-900 text-slate-400 px-3 py-1 rounded-full border border-slate-800">0 รายการ</span>
             </div>
-            <div id="dashboard-list" class="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[65vh]">
-                <p id="dashboard-empty-msg" class="text-center text-xs text-slate-500 my-6">ไม่พบประวัติการทดสอบของคุณ</p>
+            <div id="dashboard-list" class="flex-1 overflow-y-auto space-y-3 pr-0.5 max-h-[68vh]">
+                <p id="dashboard-empty-msg" class="text-center text-xs text-slate-500 my-12">ไม่พบประวัติการทดสอบในบัญชีนี้</p>
             </div>
         </div>
 
-        <div id="page-guide" class="hidden flex-1 flex flex-col gap-3 my-2 overflow-y-auto pr-1">
-            <h2 class="text-md font-bold text-slate-200 flex items-center gap-1.5 border-b border-slate-800 pb-1">
-                <i data-lucide="book-open" class="text-amber-500 w-4 h-4"></i> คู่มือวิธีการใช้งานแอปพลิเคชัน
+        <!-- SUB-PAGE 3: หน้าแนะนำวิธีการใช้งาน -->
+        <div id="page-guide" class="hidden flex-1 flex flex-col gap-4 my-4 overflow-y-auto pr-0.5">
+            <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2 border-b border-slate-900 pb-2">
+                <i data-lucide="book-open" class="text-amber-500 w-4 h-4"></i> คู่มือลำดับการฝึกซ้อมใช้งานแอป
             </h2>
             
             <div class="space-y-3 text-xs text-slate-300">
-                <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-750 flex gap-3">
-                    <div class="bg-amber-500/20 text-amber-500 font-bold rounded-lg w-6 h-6 flex items-center justify-center shrink-0">1</div>
+                <div class="glass-panel p-4 rounded-2xl flex gap-3.5 items-start">
+                    <div class="bg-amber-500/10 text-amber-400 font-black rounded-xl w-7 h-7 flex items-center justify-center shrink-0 border border-amber-500/20">1</div>
                     <div>
-                        <h3 class="font-bold text-slate-200 mb-0.5 text-sm">การจัดวางอุปกรณ์สำหรับการเทส</h3>
-                        <p>นำโทรศัพท์มือถือใส่ไว้ในกระเป๋าเสื้อ/กางเกงที่แนบเนื้อ หรือรัดไว้กับหลังมือ/ข้อมือขณะทำการกดหุ่นฝึก เพื่อให้เซนเซอร์วัดค่าการเคลื่อนไหวตรงกับจังหวะปั๊มจริง</p>
+                        <h3 class="font-bold text-slate-100 mb-1 text-sm">การจัดติดตั้งโทรศัพท์</h3>
+                        <p class="text-slate-400 leading-relaxed">รัดมือถือไว้กับหลังมือ หรือใส่ในกระเป๋าเสื้อที่รัดแน่นขณะซ้อมกดหุ่น เพื่อให้ไจโรสโคปทำงานได้ตรงจังหวะที่สุด</p>
                     </div>
                 </div>
 
-                <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-750 flex gap-3">
-                    <div class="bg-amber-500/20 text-amber-500 font-bold rounded-lg w-6 h-6 flex items-center justify-center shrink-0">2</div>
+                <div class="glass-panel p-4 rounded-2xl flex gap-3.5 items-start">
+                    <div class="bg-amber-500/10 text-amber-400 font-black rounded-xl w-7 h-7 flex items-center justify-center shrink-0 border border-amber-500/20">2</div>
                     <div>
-                        <h3 class="font-bold text-slate-200 mb-0.5 text-sm">การตั้งค่าศูนย์ (Auto-Calibration)</h3>
-                        <p>ก่อนกดปุ่มเริ่มทดสอบ ให้จัดท่าทางและมุมล็อกเริ่มต้นให้เรียบร้อย เมื่อกดปุ่ม <b>"เริ่มการทดสอบ"</b> ระบบจะเซ็ตมุมเอียงในขณะนั้นให้กลายเป็น 0° ทันทีโดยอัตโนมัติ</p>
+                        <h3 class="font-bold text-slate-100 mb-1 text-sm">การคาลิเบรตล็อกศูนย์องศา</h3>
+                        <p class="text-slate-400 leading-relaxed">ตั้งท่าของคุณให้พร้อมในแนวดิ่ง เมื่อกดปุ่ม <b>"เริ่มทดสอบ"</b> ระบบจะปรับมุมเอียงขณะนั้นให้เป็น 0° วินาทีแรกทันที</p>
                     </div>
                 </div>
 
-                <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-750 flex gap-3">
-                    <div class="bg-amber-500/20 text-amber-500 font-bold rounded-lg w-6 h-6 flex items-center justify-center shrink-0">3</div>
+                <div class="glass-panel p-4 rounded-2xl flex gap-3.5 items-start">
+                    <div class="bg-amber-500/10 text-amber-400 font-black rounded-xl w-7 h-7 flex items-center justify-center shrink-0 border border-amber-500/20">3</div>
                     <div>
-                        <h3 class="font-bold text-slate-200 mb-0.5 text-sm">การดูแถบสีแจ้งเตือน</h3>
-                        <p><b>สีเขียว:</b> จังหวะดีและถูกต้องตามเกณฑ์มาตรฐาน<br><b>สีฟ้า:</b> จังหวะเนิบช้าเกินไปเล็กน้อย<br><b>สีแดง:</b> จังหวะเร็วเกินเกณฑ์ หรือ มุมเครื่องเอียงมากเกินไป</p>
-                    </div>
-                </div>
-
-                <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-750 flex gap-3">
-                    <div class="bg-amber-500/20 text-amber-500 font-bold rounded-lg w-6 h-6 flex items-center justify-center shrink-0">4</div>
-                    <div>
-                        <h3 class="font-bold text-slate-200 mb-0.5 text-sm">การบันทึกประวัติหลังฝึก</h3>
-                        <p>เมื่อซ้อมเสร็จแล้วกดปุ่ม "หยุดทดสอบ" ระบบจะประมวลผลสรุปค่าความเร็วสูงสุด (Max BPM) ขึ้นมา ให้กดปุ่ม <b>"บันทึกผลการทดสอบรอบนี้"</b> ข้อมูลจึงจะเซฟลงฐานข้อมูลหลัก</p>
+                        <h3 class="font-bold text-slate-100 mb-1 text-sm">ระบบคัดกรองแถบไฟสี</h3>
+                        <p class="text-slate-400 leading-relaxed"><b>สีเขียว:</b> จังหวะสมบูรณ์แบบมาก | <b>สีฟ้า:</b> แรงปั๊มเริ่มเนิบช้าเกินไป | <b>สีแดง:</b> กดรัวเร็วเกินไป หรือองศาตัวเครื่องบิดเบี้ยวมากเกินเกณฑ์สากล</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="page-criteria" class="hidden flex-1 flex flex-col gap-3 my-2 overflow-y-auto pr-1">
-            <h2 class="text-md font-bold text-slate-200 flex items-center gap-1.5 border-b border-slate-800 pb-1">
-                <i data-lucide="award" class="text-amber-500 w-4 h-4"></i> เกณฑ์มาตรฐานการกู้ชีพ (AHA Guidelines)
+        <!-- SUB-PAGE 4: หน้าเกณฑ์มาตรฐานในการ CPR -->
+        <div id="page-criteria" class="hidden flex-1 flex flex-col gap-4 my-4 overflow-y-auto pr-0.5">
+            <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2 border-b border-slate-900 pb-2">
+                <i data-lucide="award" class="text-amber-500 w-4 h-4"></i> เกณฑ์สากลชี้วัดการกู้ชีพชีพ (AHA)
             </h2>
             
-            <div class="space-y-2.5">
-                <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700">
-                    <div class="flex items-center gap-2 mb-1">
-                        <i data-lucide="zap" class="text-emerald-400 w-4 h-4"></i>
-                        <h3 class="text-sm font-bold text-slate-200">ความถี่ในการกดหน้าอก (Compression Rate)</h3>
+            <div class="space-y-3">
+                <div class="glass-panel p-4 rounded-2xl">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <span class="p-1 bg-emerald-500/10 text-emerald-400 rounded-lg"><i data-lucide="zap" class="w-4 h-4"></i></span>
+                        <h3 class="text-xs font-bold text-slate-200">ความถี่อัตราความเร็ว (Compression Rate)</h3>
                     </div>
-                    <p class="text-xs text-slate-300 leading-relaxed">
-                        เกณฑ์มาตรฐานสากลกำหนดให้กดด้วยความเร็ว <span class="text-green-400 font-bold">100 ถึง 120 ครั้งต่อนาที (BPM)</span> การกดช้ากว่านี้จะทำให้เลือดไปเลี้ยงสมองไม่พอ ส่วนการกดเร็วกว่านี้จะทำให้หัวใจคลายตัวรับเลือดกลับเข้าห้องหัวใจไม่ทัน
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        ต้องรักษาอัตราปั๊มให้อยู่ที่ <span class="text-emerald-400 font-bold">100 - 120 ครั้งต่อนาที</span> การกดที่เร็วเกินไปจะส่งผลให้ห้องหัวใจไม่มีเวลาคลายตัวเพื่อรับเลือดหมุนเวียนกลับเข้ามา
                     </p>
                 </div>
 
-                <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700">
-                    <div class="flex items-center gap-2 mb-1">
-                        <i data-lucide="move-vertical" class="text-emerald-400 w-4 h-4"></i>
-                        <h3 class="text-sm font-bold text-slate-200">มุมองศาแนวดิ่ง (Relative Angle)</h3>
+                <div class="glass-panel p-4 rounded-2xl">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <span class="p-1 bg-emerald-500/10 text-emerald-400 rounded-lg"><i data-lucide="move-vertical" class="w-4 h-4"></i></span>
+                        <h3 class="text-xs font-bold text-slate-200">องศาแนวดิ่งตั้งฉาก (Compression Angle)</h3>
                     </div>
-                    <p class="text-xs text-slate-300 leading-relaxed">
-                        แขนของผู้กดปุ่มทำหน้าอกจะต้อง <span class="text-green-400 font-bold">ตั้งฉาก 90 องศากับผู้ป่วย</span> ตลอดเวลา ในแอปพลิเคชันนี้จึงกำหนดให้รักษามุมสัมพัทธ์ให้อยู่ในช่วงเอียงไม่เกิน <span class="text-amber-500 font-bold">±8 องศา</span> จากจุดเซ็ตศูนย์ เพื่อป้องกันไม่ให้ทิศทางแรงกดเบี้ยวเฉไฉออกข้างกระดูกหน้าอก
-                    </p>
-                </div>
-
-                <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700">
-                    <div class="flex items-center gap-2 mb-1">
-                        <i data-lucide="gauge" class="text-sky-400 w-4 h-4"></i>
-                        <h3 class="text-sm font-bold text-slate-200">เกณฑ์ความลึกที่ถูกต้อง (Compression Depth)</h3>
-                    </div>
-                    <p class="text-xs text-slate-300 leading-relaxed">
-                        สำหรับผู้ใหญ่ ควรกดลึกลงไปอย่างน้อย <span class="text-sky-400 font-bold">5 เซนติเมตร (แต่ไม่เกิน 6 เซนติเมตร)</span> และทุกครั้งที่กดเสร็จ ต้องปล่อยให้หน้าอกหน้าใจคืนตัวขึ้นมาจนสุด (Chest Recoil) ก่อนจะเริ่มกดครั้งต่อไป
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        ทิศทางทิ้งน้ำหนักต้องตั้งฉาก 90 องศากับผู้ป่วย แอปพลิเคชันตั้งค่าช่วงเซฟตี้โซนไว้ที่เอียงไม่เกิน <span class="text-amber-400 font-bold">±8 องศา</span> เพื่อรักษากระดูกหน้าอกไม่ให้หักหรืองอผิดทิศทาง
                     </p>
                 </div>
             </div>
@@ -238,6 +247,7 @@
 
     </div>
 
+    <!-- Firebase SDK Mapping -->
     <script type="importmap">
       {
         "imports": {
