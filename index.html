@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPR Assistant Pro</title>
+    <title>CPR Assistant Pro & Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="styles.css">
@@ -15,7 +15,7 @@
             <h1 class="text-3xl font-black text-amber-500 flex items-center justify-center gap-2 mb-2">
                 <i data-lucide="heart-pulse" class="w-10 h-10 animate-pulse"></i> CPR Pro
             </h1>
-            <p class="text-sm text-slate-400">กรุณาลงชื่อเข้าใช้งานเพื่อบันทึกประวัติการทดสอบ</p>
+            <p class="text-sm text-slate-400">กรุณาลงชื่อเข้าใช้งานเพื่อบันทึกและจัดการประวัติ</p>
         </div>
         <button id="btn-login" class="bg-white text-slate-900 font-bold py-3 px-6 rounded-2xl flex items-center gap-3 shadow-lg hover:bg-slate-100 transition-all active:scale-95">
             <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -29,20 +29,34 @@
     </div>
 
     <div id="app-screen" class="hidden flex-1 flex flex-col justify-between">
-        <header class="flex justify-between items-center py-2 border-b border-slate-800">
-            <div class="flex items-center gap-2">
-                <img id="user-avatar" class="w-8 h-8 rounded-full border border-slate-700" src="" alt="Avatar">
-                <div>
-                    <p id="user-name" class="text-xs font-bold text-slate-200">Loading...</p>
-                    <p class="text-[10px] text-amber-500">Premium Test Account</p>
+        
+        <header class="flex flex-col gap-3 py-2 border-b border-slate-800">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <img id="user-avatar" class="w-8 h-8 rounded-full border border-slate-700" src="" alt="Avatar">
+                    <div>
+                        <p id="user-name" class="text-xs font-bold text-slate-200">Loading...</p>
+                        <p class="text-[10px] text-emerald-400 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> สมาชิกออนไลน์
+                        </p>
+                    </div>
                 </div>
+                <button id="btn-logout" class="text-xs text-rose-400 hover:text-rose-300 font-medium flex items-center gap-1">
+                    <i data-lucide="log-out" class="w-3 h-3"></i> ออกจากระบบ
+                </button>
             </div>
-            <button id="btn-logout" class="text-xs text-rose-400 hover:text-rose-300 font-medium flex items-center gap-1">
-                <i data-lucide="log-out" class="w-3 h-3"></i> ออกจากระบบ
-            </button>
+
+            <div class="grid grid-cols-2 bg-slate-950 p-1 rounded-xl text-sm font-semibold">
+                <button id="tab-test" class="py-2 text-center rounded-lg bg-slate-800 text-amber-500 transition-all flex items-center justify-center gap-1">
+                    <i data-lucide="activity" class="w-4 h-4"></i> เริ่มทดสอบ
+                </button>
+                <button id="tab-dashboard" class="py-2 text-center rounded-lg text-slate-400 transition-all flex items-center justify-center gap-1">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> แดชบอร์ดข้อมูล
+                </button>
+            </div>
         </header>
 
-        <main class="flex-1 flex flex-col justify-center gap-4 my-4">
+        <div id="page-test" class="flex-1 flex flex-col justify-center gap-4 my-4">
             <div class="bg-slate-800 rounded-2xl p-6 text-center shadow-lg border border-slate-750">
                 <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-2">ความเร็วการกด (BPM)</h2>
                 <div class="flex items-baseline justify-center gap-2">
@@ -77,16 +91,30 @@
                     <span id="timer" class="text-3xl font-bold text-white">00:00</span>
                 </div>
             </div>
-        </main>
 
-        <footer class="flex flex-col gap-2 pb-2">
-            <button id="btn-action" class="w-full bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg shadow-amber-900/30 flex items-center justify-center gap-2 transition-all">
-                <i data-lucide="play" fill="currentColor"></i> เริ่มการทดสอบความไวสูง
-            </button>
-            <div class="text-center text-[10px] text-slate-500 p-2 bg-slate-950/40 rounded-lg">
-                ระบบจะบันทึก Log ลงคลาวด์อัตโนมัติเมื่อกด "หยุดการทดสอบ"
+            <footer class="flex flex-col gap-2 mt-auto">
+                <button id="btn-action" class="w-full bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg flex items-center justify-center gap-2 transition-all">
+                    <i data-lucide="play" fill="currentColor"></i> เริ่มการทดสอบความไวสูง
+                </button>
+            </footer>
+        </div>
+
+        <div id="page-dashboard" class="hidden flex-1 flex flex-col gap-4 my-4 overflow-hidden">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+                    <i data-lucide="history" class="text-amber-500"></i> ประวัติการทดสอบของคุณ
+                </h2>
+                <span id="session-count" class="text-xs bg-slate-800 text-slate-400 px-3 py-1 rounded-full border border-slate-700">0 รายการ</span>
             </div>
-        </footer>
+
+            <div id="dashboard-list" class="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[60vh]">
+                <p id="dashboard-empty-msg" class="text-center text-sm text-slate-500 my-8">ไม่พบประวัติการทดสอบของคุณ</p>
+            </div>
+            
+            <div class="text-center text-[10px] text-slate-500 p-2 bg-slate-950/40 rounded-lg">
+                ข้อมูลทั้งหมดจะซิงค์เฉพาะของบัญชีคุณเท่านั้น บุคคลอื่นจะไม่สามารถเห็นหรือลบข้อมูลของคุณได้
+            </div>
+        </div>
     </div>
 
     <script type="importmap">
