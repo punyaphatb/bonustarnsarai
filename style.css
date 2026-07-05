@@ -1,0 +1,12 @@
+/* ป้องกันการเผลอกดค้างหรือลากนิ้วขยับแล้วกลายเป็นการไฮไลต์ข้อความบนจอโทรศัพท์ */
+.select-none {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* เพิ่มแอนิเมชันให้การหมุนของตัวระบุมุมเนียนขึ้น */
+#angle-indicator {
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
