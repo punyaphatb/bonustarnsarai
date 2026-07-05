@@ -1,12 +1,37 @@
-/* ป้องกันการเผลอกดค้างหรือลากนิ้วขยับแล้วกลายเป็นการไฮไลต์ข้อความบนจอโทรศัพท์ */
-.select-none {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+/* Custom CSS สำหรับเพิ่มมิติความพรีเมียม */
+@keyframes pulse-glow {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.4)); }
+    50% { transform: scale(1.05); filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.8)); }
 }
 
-/* เพิ่มแอนิเมชันให้การหมุนของตัวระบุมุมเนียนขึ้น */
-#angle-indicator {
-    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+.animate-glow {
+    animation: pulse-glow 2s infinite ease-in-out;
+}
+
+/* ซ่อน Scrollbar สำหรับความเป็น Native App */
+::-webkit-scrollbar {
+    width: 5px;
+}
+::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* นำทางแบบนุ่มนวล */
+.page-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* เอฟเฟกต์กระจกเบลอ (Glassmorphism) */
+.glass-panel {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
