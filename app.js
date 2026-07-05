@@ -1,11 +1,14 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
+import { 
+    getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
+    updateProfile, signOut, onAuthStateChanged 
+} from "firebase/auth";
 import { 
     getFirestore, collection, addDoc, serverTimestamp, 
     query, where, orderBy, onSnapshot, doc, deleteDoc 
 } from "firebase/firestore";
 
-// 🛠️ ตังค่า Firebase Config เดิมของคุณที่นี่
+// 🛠️ ตั้งค่า Firebase Config ของคุณตรงนี้ตามปกติ
 const firebaseConfig = {
     apiKey: "AIzaSyB-FxoUZm3pMptXF6kJIvJJkzNZ63ZjYPA",
   authDomain: "cpr-assistant-f0833.firebaseapp.com",
@@ -19,15 +22,97 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
 
-// ตัวแปร Screens และระบบสมาชิก
+// ผูกองค์ประกอบหน้าจอ (Screen UI elements)
 const loginScreen = document.getElementById('login-screen');
+const registerScreen = document.getElementById('register-screen');
 const appScreen = document.getElementById('app-screen');
-let currentUser = null;
-let unsubscribeDashboard = null; // เก็บฟังก์ชันสำหรับคืนค่าหยุดฟังฐานข้อมูลเมื่อล็อกเอาต์
 
-// ส่วนควบคุมแท็บเมนูสลับหน้าจอ (Tab UI Navigation)
+let currentUser = null;
+let unsubscribeDashboard = null;
+
+// ปุ่มและลิงก์สำหรับสลับฟอร์ม (Login <-> Register)
+document.getElementById('go-to-register').addEventListener('click', () => {
+    loginScreen.classList.add('hidden');
+    registerScreen.classList.remove('hidden');
+});
+document.getElementById('go-to-login').addEventListener('click', () => {
+    registerScreen.classList.add('hidden');
+    loginScreen.classList.remove('hidden');
+});
+
+// ==========================================
+// 🔐 ระบบสมัครสมาชิก & เข้าสู่ระบบด้วยอีเมลฐานข้อมูลปกติ
+// ==========================================
+
+// 1. ฟอร์มลงทะเบียนสมัครสมาชิก (Register)
+document.getElementById('form-register').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('reg-name').value;
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-password').value;
+
+    try {
+        // บันทึกอีเมลและพาสเวิร์ดลงระบบ Auth หลัก
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        // บันทึกชื่อผู้ใช้งานผูกเข้ากับโปรไฟล์
+        await updateProfile(userCredential.user, { displayName: name });
+        
+        alert("สมัครสมาชิกสำเร็จระบบจะนำคุณเข้าใช้งานอัตโนมัติ");
+        document.getElementById('form-register').reset();
+    } catch (error) {
+        console.error(error);
+        alert("สมัครสมาชิกไม่สำเร็จ: " + error.message);
+    }
+});
+
+// 2. ฟอร์มเข้าสู่ระบบ (Login)
+document.getElementById('form-login').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+        document.getElementById('form-login').reset();
+    } catch (error) {
+        console.error(error);
+        alert("อีเมลหรือรหัสผ่านไม่ถูกต้อง: " + error.message);
+    }
+});
+
+// 3. ตัวดักจับสถานะล็อกอินเข้าสู่ระบบสมาชิก
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        currentUser = user;
+        document.getElementById('user-name').innerText = user.displayName || 'User';
+        // ดึงอักษรตัวแรกของชื่อผู้ใช้มาทำเป็นรูปภาพโปรไฟล์จำลอง
+        document.getElementById('user-avatar-fallback').innerText = (user.displayName || 'U').charAt(0);
+        
+        loginScreen.classList.add('hidden');
+        registerScreen.classList.add('hidden');
+        appScreen.classList.remove('hidden');
+        switchTab('test');
+        lucide.createIcons();
+
+        // โหลดข้อมูลแดชบอร์ดเฉพาะของสมาชิกคนนี้
+        listenToUserDashboard(user.uid);
+    } else {
+        currentUser = null;
+        appScreen.classList.add('hidden');
+        loginScreen.classList.remove('hidden');
+        if (isRunning) stopTracking();
+        if (unsubscribeDashboard) unsubscribeDashboard();
+    }
+});
+
+// 4. ปุ่มออกจากระบบ
+document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+
+
+// ==========================================
+// 📊 การจัดการแท็บหน้าจอ & แดชบอร์ดดูประวัติ/ลบข้อมูล
+// ==========================================
 const tabTest = document.getElementById('tab-test');
 const tabDashboard = document.getElementById('tab-dashboard');
 const pageTest = document.getElementById('page-test');
@@ -50,55 +135,19 @@ function switchTab(target) {
     }
 }
 
-// ==========================================
-// 🔐 สมาชิกและล็อกอิน (แยกเก็บและฟังข้อมูล Dashboard รายบุคคล)
-// ==========================================
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        currentUser = user;
-        document.getElementById('user-name').innerText = user.displayName;
-        document.getElementById('user-avatar').src = user.photoURL;
-        
-        loginScreen.classList.add('hidden');
-        appScreen.classList.remove('hidden');
-        switchTab('test'); // ล็อกอินเสร็จให้เด้งเข้าหน้าเทสก่อน
-        lucide.createIcons();
-
-        // 🟢 เรียกฟังข้อมูลจากคลาวด์แบบเจาะจงเฉพาะเจ้าของ UID สมาชิกคนนี้เท่านั้น
-        listenToUserDashboard(user.uid);
-    } else {
-        currentUser = null;
-        appScreen.classList.add('hidden');
-        loginScreen.classList.remove('hidden');
-        if (isRunning) stopTracking();
-        if (unsubscribeDashboard) unsubscribeDashboard(); // หยุดดึงข้อมูลคลาวด์เมื่อออกระบบ
-    }
-});
-
-document.getElementById('btn-login').addEventListener('click', async () => {
-    try { await signInWithPopup(auth, provider); } catch (e) { alert("ล็อกอินไม่สำเร็จ: " + e.message); }
-});
-document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
-
-
-// ==========================================
-// 📊 ฟังก์ชันระบบ REAL-TIME DASHBOARD & ระบบลบข้อมูล
-// ==========================================
 function listenToUserDashboard(uid) {
-    // กรองหาข้อมูลในคอลเลกชัน "cpr_sessions" โดยเอาเฉพาะข้อมูลที่มี userId ตรงกับสมาชิกคนปัจจุบัน
     const q = query(
         collection(db, "cpr_sessions"),
         where("userId", "==", uid),
         orderBy("createdAt", "desc")
     );
 
-    // ดึงและอัปเดต UI แบบ Real-time ทันทีที่มีการเพิ่มหรือลบ
     unsubscribeDashboard = onSnapshot(q, (snapshot) => {
         const listContainer = document.getElementById('dashboard-list');
         const emptyMsg = document.getElementById('dashboard-empty-msg');
         document.getElementById('session-count').innerText = `${snapshot.size} รายการ`;
 
-        listContainer.innerHTML = ''; // ล้างลิสต์เก่าบนหน้าจอออกก่อนเพื่อวาดใหม่
+        listContainer.innerHTML = '';
 
         if (snapshot.empty) {
             emptyMsg.classList.remove('hidden');
@@ -112,7 +161,6 @@ function listenToUserDashboard(uid) {
             const data = docSnapshot.data();
             const docId = docSnapshot.id;
 
-            // แปลงรูปแบบวันที่ปั๊มให้สั้นและเข้าใจง่าย
             let dateText = "กำลังบันทึก...";
             if (data.createdAt) {
                 dateText = data.createdAt.toDate().toLocaleDateString('th-TH', {
@@ -120,12 +168,11 @@ function listenToUserDashboard(uid) {
                 }) + " น.";
             }
 
-            // สร้างการ์ดแสดงผลสถิติแต่ละรอบขึ้นมา
             const itemCard = document.createElement('div');
-            itemCard.className = "bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center gap-3 relative overflow-hidden group shadow-md";
+            itemCard.className = "bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center gap-3 shadow-md";
             itemCard.innerHTML = `
                 <div class="flex-1">
-                    <div class="text-[10px] text-slate-400 mb-1 font-medium">${dateText}</div>
+                    <div class="text-[10px] text-slate-400 mb-1">${dateText}</div>
                     <div class="grid grid-cols-3 gap-2 text-center bg-slate-900/50 p-2 rounded-lg">
                         <div>
                             <span class="block text-[10px] text-slate-400">จำนวน</span>
@@ -141,7 +188,7 @@ function listenToUserDashboard(uid) {
                         </div>
                     </div>
                 </div>
-                <button class="btn-delete bg-rose-950/40 hover:bg-rose-600/90 text-rose-400 hover:text-white p-2 rounded-xl transition-all border border-rose-900/50" data-id="${docId}">
+                <button class="btn-delete bg-rose-950/40 hover:bg-rose-600 text-rose-400 hover:text-white p-2 rounded-xl transition-all border border-rose-900/50" data-id="${docId}">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
             `;
@@ -149,35 +196,24 @@ function listenToUserDashboard(uid) {
             listContainer.appendChild(itemCard);
         });
 
-        // เปิดสิทธิ์ให้ปุ่มไอคอนลบแต่ละแถวทำงาน
         document.querySelectorAll('.btn-delete').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const idToDelete = button.getAttribute('data-id');
-                deleteSessionLog(idToDelete);
+            button.addEventListener('click', () => {
+                deleteSessionLog(button.getAttribute('data-id'));
             });
         });
 
-        lucide.createIcons(); // โหลดไอคอนถังขยะขึ้นแสดงผล
-    }, (error) => {
-        console.error("Dashboard error:", error);
+        lucide.createIcons();
     });
 }
 
-// ❌ ฟังก์ชันสั่งลบข้อมูลเดี่ยวออกจาก Firestore
 async function deleteSessionLog(id) {
-    if (confirm("คุณแน่ใจใช่ไหมที่จะลบประวัติการทดสอบรอบนี้อย่างถาวร?")) {
-        try {
-            await deleteDoc(doc(db, "cpr_sessions", id));
-            console.log("ลบประวัติออกจากคลาวด์แล้ว ID:", id);
-        } catch (error) {
-            alert("ไม่สามารถลบข้อมูลได้: " + error.message);
-        }
+    if (confirm("คุณแน่ใจใช่ไหมที่จะลบประวัติการทดสอบรอบนี้?")) {
+        try { await deleteDoc(doc(db, "cpr_sessions", id)); } catch (e) { alert("ลบไม่ได้: " + e.message); }
     }
 }
 
-
 // ==========================================
-// 🏎️ ระบบเซนเซอร์และการทำงานตรวจจับของคุณเดิม (เสถียรแล้ว)
+// 🏎️ ระบบเซนเซอร์ตรวจจับ (โค้ดดั้งเดิมที่เสถียรของคุณ)
 // ==========================================
 let isRunning = false;
 let totalCount = 0;
@@ -218,8 +254,7 @@ async function startTracking() {
     const hasPermission = await requestSensorPermission();
     if (!hasPermission) { alert("จำเป็นต้องใช้สิทธิ์เข้าถึงเซนเซอร์"); return; }
 
-    isRunning = true;
-    isCalibrated = false; 
+    isRunning = true; isCalibrated = false; 
     btnAction.innerHTML = `<i data-lucide="square" fill="currentColor"></i> หยุดการทดสอบ`;
     btnAction.classList.replace('bg-amber-600', 'bg-red-600');
     lucide.createIcons();
@@ -331,13 +366,13 @@ async function saveDataToFirestore() {
         await addDoc(collection(db, "cpr_sessions"), {
             userId: currentUser.uid,
             userEmail: currentUser.email,
-            userName: currentUser.displayName,
+            userName: currentUser.displayName || 'User',
             totalCompressions: totalCount,
             durationSeconds: seconds,
             maxBPM: maxBPMRecorded,
             createdAt: serverTimestamp()
         });
-        console.log("บันทึกประวัติสำเร็จ");
+        console.log("บันทึกข้อมูลเรียบร้อย");
     } catch (e) { console.error("บันทึกผิดพลาด:", e); }
 }
 
