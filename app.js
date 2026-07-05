@@ -102,13 +102,14 @@ Object.keys(tabs).forEach(key => {
     tabs[key].btn.addEventListener('click', () => switchTab(key));
 });
 
+// ค้นหาฟังก์ชัน switchTab เดิมใน app.js แล้วแทนที่ด้วยตัวนี้ (เพื่อสลับแท็บให้สีเปลี่ยนสวยงาม)
 function switchTab(targetKey) {
     Object.keys(tabs).forEach(key => {
         if (key === targetKey) {
-            tabs[key].btn.className = "py-2 rounded-lg bg-slate-800 text-amber-500 transition-all flex flex-col items-center gap-0.5";
+            tabs[key].btn.className = "py-2.5 rounded-xl bg-slate-800 text-amber-400 shadow-md transition-all flex flex-col items-center gap-1";
             tabs[key].page.classList.remove('hidden');
         } else {
-            tabs[key].btn.className = "py-2 rounded-lg text-slate-400 transition-all flex flex-col items-center gap-0.5";
+            tabs[key].btn.className = "py-2.5 rounded-xl text-slate-400 hover:text-slate-200 transition-all flex flex-col items-center gap-1";
             tabs[key].page.classList.add('hidden');
         }
     });
@@ -282,16 +283,16 @@ function handleOrientation(event) {
     angleIndicator.style.transform = `rotate(${relativeAngle}deg)`;
 
     if (Math.abs(relativeAngle) <= 8) {
-        angleValue.className = "text-4xl font-black text-green-400";
-        angleIndicator.className = "w-0.5 h-6 bg-green-400 absolute rounded origin-center transition-transform duration-200";
-        angleStatus.innerText = "มุมตรงดี (โหมดเทส)";
-        angleStatus.className = "text-xs font-medium text-green-400";
-    } else {
-        angleValue.className = "text-4xl font-black text-amber-500";
-        angleIndicator.className = "w-0.5 h-6 bg-amber-500 absolute rounded origin-center transition-transform duration-200";
-        angleStatus.innerText = "มุมเอียงออกไป (โหมดเทส)";
-        angleStatus.className = "text-xs font-medium text-amber-500";
-    }
+    angleValue.className = "text-5xl font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]";
+    angleIndicator.className = "w-1 h-6 bg-emerald-400 absolute rounded-full origin-center transition-transform duration-200 shadow-[0_0_8px_#34d399]";
+    angleStatus.innerText = "มุมกดตั้งฉากได้ดีเยี่ยม (Safe Zone)";
+    angleStatus.className = "text-xs font-semibold text-emerald-400 mt-2";
+} else {
+    angleValue.className = "text-5xl font-black text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]";
+    angleIndicator.className = "w-1 h-6 bg-orange-500 absolute rounded-full origin-center transition-transform duration-200 shadow-[0_0_8px_#f97316]";
+    angleStatus.innerText = "เครื่องเอียงมากเกินไป กรุณาตั้งแขนให้ตรง";
+    angleStatus.className = "text-xs font-semibold text-orange-400 mt-2";
+}
 }
 
 function handleMotion(event) {
@@ -328,20 +329,24 @@ function handleMotion(event) {
 }
 
 function updateBPMUI(bpm) {
+    const bpmTopBar = document.getElementById('bpm-top-bar');
     bpmValue.innerText = bpm;
+    
     if (bpm >= 100 && bpm <= 120) {
-        bpmValue.className = "text-5xl font-black text-green-400";
-        bpmBar.className = "bg-green-400 h-full transition-all duration-300"; bpmBar.style.width = "100%";
-        bpmStatus.innerText = "จังหวะตรงตามเกณฑ์ CPR (100-120)"; bpmStatus.className = "text-xs font-medium text-green-400 mt-1";
+        bpmValue.className = "text-6xl font-black text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.3)] animate-pulse";
+        bpmBar.className = "bg-emerald-400 h-full rounded-full transition-all duration-300"; bpmBar.style.width = "100%";
+        bpmTopBar.className = "absolute top-0 left-0 w-full h-1 bg-emerald-500 shadow-[0_2px_10px_rgba(52,211,153,0.5)]";
+        bpmStatus.innerText = "ความเร็วเยี่ยม! อยู่ในเกณฑ์มาตรฐานสากล 100-120"; bpmStatus.className = "text-xs font-semibold text-emerald-400 mt-2";
     } else if (bpm < 100) {
-        bpmValue.className = "text-5xl font-black text-sky-400";
-        bpmBar.className = "bg-sky-400 h-full transition-all duration-300"; bpmBar.style.width = "50%";
-        bpmStatus.innerText = "ความเร็วช้าไปนิด"; bpmStatus.className = "text-xs font-medium text-sky-400 mt-1";
+        bpmValue.className = "text-6xl font-black text-sky-400 drop-shadow-[0_0_10px_rgba(56,189,248,0.3)]";
+        bpmBar.className = "bg-sky-400 h-full rounded-full transition-all duration-300"; bpmBar.style.width = "55%";
+        bpmTopBar.className = "absolute top-0 left-0 w-full h-1 bg-sky-500 shadow-[0_2px_10px_rgba(56,189,248,0.5)]";
+        bpmStatus.innerText = "ความเร็วช้าเกินไปเล็กน้อย เพิ่มจังหวะอีกนิด"; bpmStatus.className = "text-xs font-semibold text-sky-400 mt-2";
     } else {
-        bpmValue.className = "text-5xl font-black text-rose-500";
-        bpmBar.className = "bg-rose-500 h-full transition-all duration-300"; bpmBar.style.width = "100%";
-        bpmStatus.innerText = "ความเร็วเร็วเกินไป"; bpmStatus.className = "text-xs font-medium text-rose-500 mt-1";
+        bpmValue.className = "text-6xl font-black text-rose-500 drop-shadow-[0_0_10px_rgba(244,63,94,0.3)]";
+        bpmBar.className = "bg-rose-500 h-full rounded-full transition-all duration-300"; bpmBar.style.width = "100%";
+        bpmTopBar.className = "absolute top-0 left-0 w-full h-1 bg-rose-500 shadow-[0_2px_10px_rgba(244,63,94,0.5)]";
+        bpmStatus.innerText = "ความเร็วรัวเกินไปแล้ว! ผ่อนจังหวะลงมาหน่อย"; bpmStatus.className = "text-xs font-semibold text-rose-400 mt-2";
     }
 }
-
 btnAction.addEventListener('click', () => { if (!isRunning) startTracking(); else stopTracking(); });
