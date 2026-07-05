@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPR Assistant (Real Sensors)</title>
+    <title>CPR Assistant (Ultra-Sensitive Test Mode)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-slate-900 text-white font-sans min-h-screen flex flex-col justify-between p-4 select-none">
 
     <header class="text-center py-2 border-b border-slate-800">
-        <h1 class="text-xl font-bold text-red-500 flex items-center justify-center gap-2">
-            <i data-lucide="heart-pulse" class="animate-pulse"></i> CPR LifeSaver
+        <h1 class="text-xl font-bold text-amber-500 flex items-center justify-center gap-2">
+            <i data-lucide="test-tube-2"></i> CPR Test Mode (Ultra-Sensitive)
         </h1>
-        <p class="text-xs text-slate-400">ระบบวัดค่าจริงจากเซนเซอร์โทรศัพท์ (HTTPS)</p>
+        <p class="text-xs text-slate-400">ขยับนิดเดียวนับทันที | Debounce 300ms</p>
     </header>
 
     <main class="flex-1 flex flex-col justify-center gap-6 my-4">
         
         <div class="bg-slate-800 rounded-2xl p-6 text-center shadow-lg border border-slate-750">
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-2">ความเร็วการกดหน้าอก</h2>
+            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-2">ความเร็วการกด (BPM)</h2>
             <div class="flex items-baseline justify-center gap-2">
                 <span id="bpm-value" class="text-6xl font-black text-slate-500 transition-all duration-200">0</span>
                 <span class="text-xl text-slate-400 font-medium">ครั้ง/นาที</span>
@@ -27,11 +27,11 @@
             <div class="mt-4 w-full bg-slate-700 rounded-full h-3 overflow-hidden">
                 <div id="bpm-bar" class="bg-slate-500 h-full transition-all duration-300" style="width: 0%"></div>
             </div>
-            <p id="bpm-status" class="text-sm font-medium text-slate-400 mt-2">ยังไม่มีการตรวจจับจังหวะ</p>
+            <p id="bpm-status" class="text-sm font-medium text-slate-400 mt-2">กำลังรอการทดสอบขยับเครื่อง...</p>
         </div>
 
         <div class="bg-slate-800 rounded-2xl p-6 text-center shadow-lg border border-slate-750">
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-2">มุมเอียงแนวตั้ง (แกน Beta)</h2>
+            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-2">มุมเอียงสัมพัทธ์ (Auto-Calibration)</h2>
             <div class="flex items-baseline justify-center gap-1">
                 <span id="angle-value" class="text-5xl font-black text-slate-500 transition-all duration-200">0°</span>
             </div>
@@ -39,16 +39,16 @@
                 <div class="w-1 h-8 bg-slate-600 absolute rounded"></div>
                 <div id="angle-indicator" class="w-1 h-8 bg-slate-500 absolute rounded origin-center transition-transform duration-200" style="transform: rotate(0deg);"></div>
             </div>
-            <p id="angle-status" class="text-sm font-medium text-slate-400">ยังไม่ได้เริ่มตรวจวัดมุม</p>
+            <p id="angle-status" class="text-sm font-medium text-slate-400">มุมจะเซ็ตเป็น 0° ทันทีที่กดเริ่ม</p>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
             <div class="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-800">
-                <span class="text-xs text-slate-400 block mb-1">กดไปแล้วทั้งหมด</span>
+                <span class="text-xs text-slate-400 block mb-1">นับได้ทั้งหมด (Count)</span>
                 <span id="total-compressions" class="text-3xl font-bold text-white">0</span>
             </div>
             <div class="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-800">
-                <span class="text-xs text-slate-400 block mb-1">เวลาที่ผ่านไป</span>
+                <span class="text-xs text-slate-400 block mb-1">เวลาทดสอบ</span>
                 <span id="timer" class="text-3xl font-bold text-white">00:00</span>
             </div>
         </div>
@@ -56,17 +56,16 @@
     </main>
 
     <footer class="flex flex-col gap-3 pb-2">
-        <button id="btn-action" class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 transition-all">
-            <i data-lucide="play" fill="currentColor"></i> เริ่มต้นการวัดค่าจริง
+        <button id="btn-action" class="w-full bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg shadow-amber-900/30 flex items-center justify-center gap-2 transition-all">
+            <i data-lucide="play" fill="currentColor"></i> เริ่มการทดสอบความไวสูง
         </button>
         
         <div class="text-center text-[10px] text-slate-500 p-2 bg-slate-950/40 rounded-lg">
-            คำแนะนำ: วางโทรศัพท์หงายราบไว้บนหลังมือของผู้กดปั๊มหัวใจในแนวตั้งฉาก
+            โหมดทดสอบ: เขย่าเครื่องเบาๆ หรือเคาะหลังเครื่องเพื่อดูการนับค่าคีย์เวิร์ด
         </div>
     </footer>
 
     <script>
-        // เรียกใช้งานไอคอนลูไซด์
         lucide.createIcons();
 
         let isRunning = false;
@@ -74,13 +73,17 @@
         let lastTapTime = 0;
         let seconds = 0;
         let timerInterval;
-        let lastAccelerationZ = 0;
 
-        // การตั้งค่าความไวเซนเซอร์ (สามารถปรับจูนได้)
-        const ACCEL_THRESHOLD = 13; // ค่าความเร่งแกน Z ที่ถือว่ามีการกดปั๊มหนักพอ (รวมแรงโน้มถ่วง ~9.8 แล้ว)
-        const DEBOUNCE_TIME = 350;    // บล็อกสัญญาณซ้ำซ้อนภายใน 350 มิลลิวินาที (กันนับเบิ้ลในการกด 1 ครั้ง)
+        let initialBeta = 0;
+        let isCalibrated = false;
 
-        // ดึง Elements จาก DOM
+        let lastTotalForce = 0;
+        let isPeak = false;
+
+        // 🛠️ ปรับตัวแปรตรงนี้เรียบร้อยแล้ว
+        const ACCEL_DELTA_THRESHOLD = 0.3; // ไวสุดๆ ขยับนิดเดียวนับทันที
+        const DEBOUNCE_TIME = 300;         // ล็อกสัญญาณซ้ำซ้อนภายใน 300 ms
+
         const btnAction = document.getElementById('btn-action');
         const bpmValue = document.getElementById('bpm-value');
         const bpmBar = document.getElementById('bpm-bar');
@@ -91,42 +94,43 @@
         const totalCompressions = document.getElementById('total-compressions');
         const timerText = document.getElementById('timer');
 
-        // ฟังก์ชันขอสิทธิ์เข้าถึงเซนเซอร์สำหรับ iOS 13+
         async function requestSensorPermission() {
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 try {
                     const permissionState = await DeviceOrientationEvent.requestPermission();
                     return permissionState === 'granted';
                 } catch (error) {
-                    console.error("Permission request denied:", error);
+                    console.error(error);
                     return false;
                 }
             }
-            return true; // สำหรับ Android/บราวเซอร์ทั่วไปที่ให้สิทธิ์อัตโนมัติบน HTTPS
+            return true; 
         }
 
-        // เริ่มต้นรับค่าเซนเซอร์
         async function startTracking() {
             const hasPermission = await requestSensorPermission();
             if (!hasPermission) {
-                alert("ปฏิเสธสิทธิ์การเข้าถึง: แอปจำเป็นต้องใช้เซนเซอร์ความเร่งเพื่อคำนวณจังหวะ CPR");
+                alert("จำเป็นต้องใช้สิทธิ์เข้าถึงเซนเซอร์");
                 return;
             }
 
             isRunning = true;
-            btnAction.innerHTML = `<i data-lucide="square" fill="currentColor"></i> หยุดการตรวจวัด`;
-            btnAction.classList.replace('bg-emerald-600', 'bg-red-600');
-            btnAction.classList.replace('hover:bg-emerald-500', 'hover:bg-red-500');
+            isCalibrated = false; 
+            btnAction.innerHTML = `<i data-lucide="square" fill="currentColor"></i> หยุดการทดสอบ`;
+            btnAction.classList.replace('bg-amber-600', 'bg-red-600');
             lucide.createIcons();
 
-            // รีเซ็ตตัวแปรพื้นฐาน
             totalCount = 0;
             seconds = 0;
             lastTapTime = 0;
+            lastTotalForce = 0;
+            isPeak = false;
             totalCompressions.innerText = "0";
             timerText.innerText = "00:00";
+            bpmValue.innerText = "0";
+            bpmBar.style.width = "0%";
+            bpmStatus.innerText = "โหมดเทสเปิดใช้งานแล้ว ลองขยับเครื่องเบาๆ...";
 
-            // เริ่มจับเวลา
             timerInterval = setInterval(() => {
                 seconds++;
                 const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
@@ -134,115 +138,121 @@
                 timerText.innerText = `${mins}:${secs}`;
             }, 1000);
 
-            // เปิด Event Listener รับค่าเซนเซอร์จริง
             window.addEventListener('deviceorientation', handleOrientation);
             window.addEventListener('devicemotion', handleMotion);
         }
 
-        // หยุดรับค่าเซนเซอร์
         function stopTracking() {
             isRunning = false;
-            btnAction.innerHTML = `<i data-lucide="play" fill="currentColor"></i> เริ่มต้นการวัดค่าจริง`;
-            btnAction.classList.replace('bg-red-600', 'bg-emerald-600');
-            btnAction.classList.replace('hover:bg-red-500', 'hover:bg-emerald-500');
+            btnAction.innerHTML = `<i data-lucide="play" fill="currentColor"></i> เริ่มการทดสอบความไวสูง`;
+            btnAction.classList.replace('bg-red-600', 'bg-amber-600');
             lucide.createIcons();
 
             clearInterval(timerInterval);
-
-            // ถอด Event เพื่อประหยัดพลังงานเครื่อง
             window.removeEventListener('deviceorientation', handleOrientation);
             window.removeEventListener('devicemotion', handleMotion);
         }
 
-        // 1. ประมวลผลองศาการเอียง (แกน Beta)
         function handleOrientation(event) {
             if (!isRunning) return;
-            
-            let beta = event.beta || 0; // มุมก้ม-เงย ของโทรศัพท์
-            let currentAngle = Math.round(beta);
+            let currentBeta = event.beta || 0; 
 
-            // อัปเดต UI องศา
-            angleValue.innerText = Math.abs(currentAngle) + "°";
-            angleIndicator.style.transform = `rotate(${currentAngle}deg)`;
+            if (!isCalibrated) {
+                initialBeta = currentBeta;
+                isCalibrated = true;
+            }
 
-            // ตรวจสอบความถูกต้อง (เป้าหมายคือราบตรง 0 องศา ยอมรับความคลาดเคลื่อนได้ +- 5 องศา)
-            if (Math.abs(currentAngle) <= 5) {
+            let relativeAngle = Math.round(currentBeta - initialBeta);
+            angleValue.innerText = Math.abs(relativeAngle) + "°";
+            angleIndicator.style.transform = `rotate(${relativeAngle}deg)`;
+
+            if (Math.abs(relativeAngle) <= 8) {
                 angleValue.className = "text-5xl font-black text-green-400";
                 angleIndicator.className = "w-1 h-8 bg-green-400 absolute rounded origin-center transition-transform duration-200";
-                angleStatus.innerText = "มุมดีมาก! กดในแนวตั้งฉากตรงๆ";
+                angleStatus.innerText = "มุมตรงดี (โหมดเทส)";
                 angleStatus.className = "text-sm font-medium text-green-400";
             } else {
                 angleValue.className = "text-5xl font-black text-amber-500";
                 angleIndicator.className = "w-1 h-8 bg-amber-500 absolute rounded origin-center transition-transform duration-200";
-                angleStatus.innerText = "มือเริ่มเอียง! พยายามตั้งมือให้ระนาบตรง 90°";
+                angleStatus.innerText = "มุมเอียงออกไป (โหมดเทส)";
                 angleStatus.className = "text-sm font-medium text-amber-500";
             }
         }
 
-        // 2. ประมวลผลแรงเร่งเพื่อหาจังหวะ (BPM)
         function handleMotion(event) {
             if (!isRunning) return;
 
-            // ตรวจจับแรงเร่งในแนวแกน Z (ทิศทางกดลง-ดันขึ้นจากหน้าจอโทรศัพท์)
-            let accZ = event.accelerationIncludingGravity ? event.accelerationIncludingGravity.z : 0;
-            if (!accZ) return;
+            let acc = event.acceleration || {};
+            let x = acc.x;
+            let y = acc.y;
+            let z = acc.z;
 
-            // ตรวจหาจุดยอดแรงกด (Peak Detection เบื้องต้น)
-            if (accZ > ACCEL_THRESHOLD && lastAccelerationZ <= ACCEL_THRESHOLD) {
-                let now = Date.now();
-                
-                if (lastTapTime > 0) {
-                    let timeDiff = now - lastTapTime;
-
-                    // ป้องกันสัญญาณสะท้อนซ้ำ (Debounce)
-                    if (timeDiff > DEBOUNCE_TIME) {
-                        // คำนวณจังหวะครั้งต่อนาที (BPM) จากเวลาที่ห่างกันของการปั๊ม
-                        let calculatedBPM = Math.round(60000 / timeDiff);
-                        
-                        // กรองค่ากรณีเซนเซอร์เหวี่ยงตัวเลขเพี้ยนสูงเกินไป
-                        if (calculatedBPM <= 220) {
-                            updateBPMUI(calculatedBPM);
-                            totalCount++;
-                            totalCompressions.innerText = totalCount;
-                            lastTapTime = now;
-                        }
-                    }
-                } else {
-                    lastTapTime = now;
-                }
+            if (x === null || y === null || z === null) {
+                let accG = event.accelerationIncludingGravity || {};
+                x = accG.x || 0;
+                y = accG.y || 0;
+                z = (accG.z || 9.8) - 9.8; 
             }
-            lastAccelerationZ = accZ;
+
+            let currentTotalForce = Math.sqrt(x*x + y*y + z*z);
+            let deltaForce = Math.abs(currentTotalForce - lastTotalForce);
+
+            // 🛠️ แก้ไขจาก ACCEL_THRESHOLD เป็น ACCEL_DELTA_THRESHOLD ให้ถูกต้อง
+            if (deltaForce > ACCEL_DELTA_THRESHOLD) {
+                if (!isPeak) {
+                    isPeak = true;
+                    let now = Date.now();
+                    
+                    if (lastTapTime > 0) {
+                        let timeDiff = now - lastTapTime;
+
+                        if (timeDiff > DEBOUNCE_TIME) {
+                            let calculatedBPM = Math.round(60000 / timeDiff);
+                            
+                            // ขยายช่วงการนับกว้างขึ้น (30-400 BPM) เพื่อให้เคาะถี่ๆ เทสได้สนุกขึ้น
+                            if (calculatedBPM >= 30 && calculatedBPM <= 400) {
+                                updateBPMUI(calculatedBPM);
+                                totalCount++;
+                                totalCompressions.innerText = totalCount;
+                                lastTapTime = now;
+                            }
+                        }
+                    } else {
+                        lastTapTime = now;
+                    }
+                }
+            } else if (deltaForce < (ACCEL_DELTA_THRESHOLD * 0.5)) { 
+                // คืนค่าพร้อมรับแรงกดถัดไปเมื่อสัญญาณเริ่มเบาลง เพื่อความไวสูงสุดในการรัวเทส
+                isPeak = false;
+            }
+
+            lastTotalForce = currentTotalForce;
         }
 
-        // 3. อัปเดตสีและข้อความความเร็วบน UI
         function updateBPMUI(bpm) {
             bpmValue.innerText = bpm;
 
             if (bpm >= 100 && bpm <= 120) {
-                // จังหวะสมบูรณ์ตามแนวทางสากล (100 - 120 ครั้งต่อนาที)
                 bpmValue.className = "text-6xl font-black text-green-400";
                 bpmBar.className = "bg-green-400 h-full transition-all duration-300";
                 bpmBar.style.width = "100%";
-                bpmStatus.innerText = "ความเร็วดีมาก! รักษาจังหวะนี้ไว้";
+                bpmStatus.innerText = "จังหวะตรงตามเกณฑ์ CPR (100-120)";
                 bpmStatus.className = "text-sm font-medium text-green-400 mt-2";
             } else if (bpm < 100) {
-                // กดช้าเกินไป
                 bpmValue.className = "text-6xl font-black text-sky-400";
                 bpmBar.className = "bg-sky-400 h-full transition-all duration-300";
                 bpmBar.style.width = "50%";
-                bpmStatus.innerText = "กดช้าเกินไป! เพิ่มความเร็วอีกนิด";
+                bpmStatus.innerText = "ความเร็วช้าไปนิด";
                 bpmStatus.className = "text-sm font-medium text-sky-400 mt-2";
             } else {
-                // กดเร็วเกินไป
                 bpmValue.className = "text-6xl font-black text-rose-500";
                 bpmBar.className = "bg-rose-500 h-full transition-all duration-300";
                 bpmBar.style.width = "100%";
-                bpmStatus.innerText = "กดเร็วเกินไป! ผ่อนความเร็วลงหน่อย";
+                bpmStatus.innerText = "ความเร็วเร็วเกินไป";
                 bpmStatus.className = "text-sm font-medium text-rose-500 mt-2";
             }
         }
 
-        // ผูกปุ่มหลักเข้ากับสคริปต์
         btnAction.addEventListener('click', () => {
             if (!isRunning) {
                 startTracking();
