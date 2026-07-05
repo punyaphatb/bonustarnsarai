@@ -3,29 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPR Assistant Pro & Dashboard</title>
+    <title>CPR Assistant Pro (Email Auth)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-slate-900 text-white font-sans min-h-screen flex flex-col justify-between p-4 select-none">
 
-    <div id="login-screen" class="flex-1 flex flex-col justify-center items-center gap-6">
-        <div class="text-center">
-            <h1 class="text-3xl font-black text-amber-500 flex items-center justify-center gap-2 mb-2">
+    <div id="login-screen" class="flex-1 flex flex-col justify-center items-center gap-4 max-w-sm mx-auto w-full">
+        <div class="text-center mb-2">
+            <h1 class="text-3xl font-black text-amber-500 flex items-center justify-center gap-2 mb-1">
                 <i data-lucide="heart-pulse" class="w-10 h-10 animate-pulse"></i> CPR Pro
             </h1>
-            <p class="text-sm text-slate-400">กรุณาลงชื่อเข้าใช้งานเพื่อบันทึกและจัดการประวัติ</p>
+            <p class="text-xs text-slate-400">เข้าสู่ระบบสมาชิกเพื่อบันทึกข้อมูลการทดสอบ</p>
         </div>
-        <button id="btn-login" class="bg-white text-slate-900 font-bold py-3 px-6 rounded-2xl flex items-center gap-3 shadow-lg hover:bg-slate-100 transition-all active:scale-95">
-            <svg class="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="#EA4335" d="M12 5.04c1.64 0 3.12.56 4.28 1.67l3.2-3.2C17.52 1.58 14.97 1 12 1 7.24 1 3.2 3.73 1.24 7.72l3.85 2.99C6.01 7.23 8.79 5.04 12 5.04z"/>
-                <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.34H12v4.44h6.44c-.28 1.48-1.12 2.74-2.38 3.58l3.69 2.87c2.16-1.99 3.42-4.92 3.42-8.55z"/>
-                <path fill="#FBBC05" d="M5.09 14.71c-.24-.72-.37-1.49-.37-2.29s.13-1.57.37-2.29L1.24 7.14C.45 8.74 0 10.52 0 12.42s.45 3.68 1.24 5.28l3.85-2.99z"/>
-                <path fill="#34A853" d="M12 23c3.24 0 5.97-1.08 7.96-2.92l-3.69-2.87c-1.02.68-2.33 1.09-3.96 1.09-3.21 0-5.99-2.19-6.96-5.67L1.5 15.62C3.46 19.61 7.5 23 12 23z"/>
-            </svg>
-            เข้าสู่ระบบด้วย Google
-        </button>
+
+        <form id="form-login" class="w-full space-y-3 bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
+            <div>
+                <label class="block text-xs text-slate-400 mb-1">อีเมล (Email)</label>
+                <input type="email" id="login-email" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500 text-white" placeholder="your@email.com">
+            </div>
+            <div>
+                <label class="block text-xs text-slate-400 mb-1">รหัสผ่าน (Password)</label>
+                <input type="password" id="login-password" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500 text-white" placeholder="••••••••">
+            </div>
+            <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-bold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-amber-950/50">
+                เข้าสู่ระบบ
+            </button>
+        </form>
+
+        <p class="text-xs text-slate-400">
+            ยังไม่มีบัญชีผู้ใช้? <button id="go-to-register" class="text-amber-500 font-bold hover:underline">สมัครสมาชิกที่นี่</button>
+        </p>
+    </div>
+
+    <div id="register-screen" class="hidden flex-1 flex flex-col justify-center items-center gap-4 max-w-sm mx-auto w-full">
+        <div class="text-center mb-2">
+            <h1 class="text-2xl font-black text-amber-500 flex items-center justify-center gap-2 mb-1">
+                <i data-lucide="user-plus" class="w-8 h-8"></i> สมัครสมาชิกใหม่
+            </h1>
+            <p class="text-xs text-slate-400">สร้างบัญชีผู้ใช้ของคุณเพื่อเริ่มต้นเก็บสถิติ</p>
+        </div>
+
+        <form id="form-register" class="w-full space-y-3 bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
+            <div>
+                <label class="block text-xs text-slate-400 mb-1">ชื่อผู้ใช้งาน (Display Name)</label>
+                <input type="text" id="reg-name" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500 text-white" placeholder="ชื่อของคุณ">
+            </div>
+            <div>
+                <label class="block text-xs text-slate-400 mb-1">อีเมล (Email)</label>
+                <input type="email" id="reg-email" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500 text-white" placeholder="example@email.com">
+            </div>
+            <div>
+                <label class="block text-xs text-slate-400 mb-1">รหัสผ่าน (Password - อย่างน้อย 6 ตัว)</label>
+                <input type="password" id="reg-password" required minlength="6" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500 text-white" placeholder="••••••••">
+            </div>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-emerald-950/50">
+                สร้างบัญชีผู้ใช้
+            </button>
+        </form>
+
+        <p class="text-xs text-slate-400">
+            มีบัญชีอยู่แล้ว? <button id="go-to-login" class="text-amber-500 font-bold hover:underline">กลับไปหน้าล็อกอิน</button>
+        </p>
     </div>
 
     <div id="app-screen" class="hidden flex-1 flex flex-col justify-between">
@@ -33,11 +73,11 @@
         <header class="flex flex-col gap-3 py-2 border-b border-slate-800">
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-2">
-                    <img id="user-avatar" class="w-8 h-8 rounded-full border border-slate-700" src="" alt="Avatar">
+                    <div class="w-8 h-8 rounded-full bg-amber-500 text-slate-900 font-black flex items-center justify-center text-xs uppercase" id="user-avatar-fallback">U</div>
                     <div>
                         <p id="user-name" class="text-xs font-bold text-slate-200">Loading...</p>
                         <p class="text-[10px] text-emerald-400 flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> สมาชิกออนไลน์
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> บัญชีฐานข้อมูลปกติ
                         </p>
                     </div>
                 </div>
@@ -109,10 +149,6 @@
 
             <div id="dashboard-list" class="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[60vh]">
                 <p id="dashboard-empty-msg" class="text-center text-sm text-slate-500 my-8">ไม่พบประวัติการทดสอบของคุณ</p>
-            </div>
-            
-            <div class="text-center text-[10px] text-slate-500 p-2 bg-slate-950/40 rounded-lg">
-                ข้อมูลทั้งหมดจะซิงค์เฉพาะของบัญชีคุณเท่านั้น บุคคลอื่นจะไม่สามารถเห็นหรือลบข้อมูลของคุณได้
             </div>
         </div>
     </div>
