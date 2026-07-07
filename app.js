@@ -184,8 +184,8 @@ let isCalibrated = false;
 let lastTotalForce = 0;
 let isPeak = false;
 
-const ACCEL_DELTA_THRESHOLD = 0.9; 
-const DEBOUNCE_TIME = 1000;         
+const ACCEL_DELTA_THRESHOLD = 0.5; 
+const DEBOUNCE_TIME = 500;         
 
 const btnAction = document.getElementById('btn-action');
 const bpmValue = document.getElementById('bpm-value');
