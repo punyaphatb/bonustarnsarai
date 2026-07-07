@@ -181,11 +181,9 @@ let maxBPMRecorded = 0;
 let initialGamma = 0;
 let initialBeta = 0;
 let isCalibrated = false;
-let lastTotalForce = 0;
-let isPeak = false;
+let isAngleMoving = false; // สำหรับป้องกันการนับเบิ้ล
 
-const ACCEL_DELTA_THRESHOLD = 0.5; 
-const DEBOUNCE_TIME = 500;         
+const DEBOUNCE_TIME = 300; 
 
 const btnAction = document.getElementById('btn-action');
 const bpmValue = document.getElementById('bpm-value');
@@ -196,10 +194,14 @@ const angleIndicator = document.getElementById('angle-indicator');
 const angleStatus = document.getElementById('angle-status');
 const totalCompressions = document.getElementById('total-compressions');
 const timerText = document.getElementById('timer');
+const btnSaveManual = document.getElementById('btn-save-manual'); // ตรวจสอบ ID ให้ตรงกับ HTML
 
 async function requestSensorPermission() {
     if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-        try { const permissionState = await DeviceOrientationEvent.requestPermission(); return permissionState === 'granted'; } catch (e) { return false; }
+        try { 
+            const permissionState = await DeviceOrientationEvent.requestPermission(); 
+            return permissionState === 'granted'; 
+        } catch (e) { return false; }
     }
     return true; 
 }
@@ -208,14 +210,18 @@ async function startTracking() {
     const hasPermission = await requestSensorPermission();
     if (!hasPermission) { alert("จำเป็นต้องใช้สิทธิ์เข้าถึงเซนเซอร์"); return; }
 
-    isRunning = true; isCalibrated = false; 
+    isRunning = true; 
+    isCalibrated = false; 
     btnAction.innerHTML = `<i data-lucide="square" fill="currentColor" class="w-5 h-5"></i> หยุดการทดสอบ`;
     btnAction.classList.replace('bg-amber-600', 'bg-red-600');
-    btnSaveManual.classList.add('hidden'); // ซ่อนปุ่มเซฟไว้ตอนกำลังวิ่งเทสอยู่
+    if(btnSaveManual) btnSaveManual.classList.add('hidden');
     lucide.createIcons();
 
-    totalCount = 0; seconds = 0; lastTapTime = 0; lastTotalForce = 0; maxBPMRecorded = 0; isPeak = false;
-    totalCompressions.innerText = "0"; timerText.innerText = "00:00"; bpmValue.innerText = "0"; bpmBar.style.width = "0%";
+    totalCount = 0; seconds = 0; lastTapTime = 0; maxBPMRecorded = 0;
+    totalCompressions.innerText = "0"; 
+    timerText.innerText = "00:00"; 
+    bpmValue.innerText = "0"; 
+    bpmBar.style.width = "0%";
     bpmStatus.innerText = "กำลังทดสอบ...";
 
     timerInterval = setInterval(() => {
@@ -226,7 +232,6 @@ async function startTracking() {
     }, 1000);
 
     window.addEventListener('deviceorientation', handleOrientation);
-    window.addEventListener('devicemotion', handleMotion);
 }
 
 function stopTracking() {
@@ -237,10 +242,8 @@ function stopTracking() {
 
     clearInterval(timerInterval);
     window.removeEventListener('deviceorientation', handleOrientation);
-    window.removeEventListener('devicemotion', handleMotion);
 
-    // 🟢 แสดงปุ่มเซฟแบบเลือกเองแทนการอัปโหลดอัตโนมัติ (Manual Save Trigger)
-    if (totalCount > 0) {
+    if (totalCount > 0 && btnSaveManual) {
         btnSaveManual.classList.remove('hidden');
         bpmStatus.innerText = `การทดสอบหยุดแล้ว สรุปผลปั๊มได้ ${totalCount} ครั้ง (Max BPM: ${maxBPMRecorded})`;
     } else {
@@ -248,121 +251,75 @@ function stopTracking() {
     }
 }
 
-// 💾 ฟังปุ่มกดบันทึกแบบเลือกเอง (Manual Save)
-btnSaveManual.addEventListener('click', async () => {
-    if (!currentUser || totalCount === 0) return;
-    btnSaveManual.disabled = true;
-    btnSaveManual.innerText = "กำลังอัปโหลดส่งคลาวด์...";
-    try {
-        await addDoc(collection(db, "cpr_sessions"), {
-            userId: currentUser.uid,
-            userEmail: currentUser.email,
-            userName: currentUser.displayName || 'User',
-            totalCompressions: totalCount,
-            durationSeconds: seconds,
-            maxBPM: maxBPMRecorded,
-            createdAt: serverTimestamp()
-        });
-        alert("บันทึกสถิติลงแดชบอร์ดสำเร็จเรียบร้อยแล้ว!");
-        btnSaveManual.classList.add('hidden'); // ซ่อนปุ่มไปหลังจากเซฟเสร็จแล้ว
-    } catch (e) { 
-        alert("บันทึกผิดพลาด: " + e.message); 
-    } finally {
-        btnSaveManual.disabled = false;
-        btnSaveManual.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> บันทึกผลการทดสอบรอบนี้ลงคลาวด์`;
-        lucide.createIcons();
-    }
-});
-
-// ฟังก์ชันประมวลผลเซนเซอร์คงเดิม (เสถียรแล้ว)
 function handleOrientation(event) {
     if (!isRunning) return;
 
-    // เปลี่ยนจาก beta ตัวเดียว เป็นการวัดความเอียงจากแนวระนาบ (0,0)
-    let currentBeta = event.beta || 0; // เอียงหน้า-หลัง
-    let currentGamma = event.gamma || 0; // เอียงซ้าย-ขวา
+    let currentBeta = event.beta || 0;
+    let currentGamma = event.gamma || 0;
 
     if (!isCalibrated) { 
         initialBeta = currentBeta; 
-        initialGamma = currentGamma; // สมมติว่ามีตัวแปรนี้เพิ่มขึ้นมา
+        initialGamma = currentGamma; 
         isCalibrated = true; 
+        return;
     }
 
-    // คำนวณความเบี่ยงเบนจากจุดเริ่มต้น (ใช้ทฤษฎีบทพีทาโกรัสเพื่อให้ได้มุมเอียงรวม)
     let diffBeta = currentBeta - initialBeta;
     let diffGamma = currentGamma - initialGamma;
     let relativeAngle = Math.round(Math.sqrt(diffBeta * diffBeta + diffGamma * diffGamma));
 
     angleValue.innerText = relativeAngle + "°";
-    // ปรับการหมุน indicator ให้ตอบสนองทั้งสองแกน (หรือจะเลือกหมุนตามแกนหลักก็ได้)
     angleIndicator.style.transform = `rotate(${Math.atan2(diffGamma, diffBeta) * 180 / Math.PI}deg)`;
 
-    // ปรับเกณฑ์เป็น 3 องศา ตามที่ต้องการ
-    if (Math.abs(relativeAngle) <= 3) {
-        angleValue.className = "text-5xl font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]";
-        angleIndicator.className = "w-1 h-6 bg-emerald-400 absolute rounded-full origin-center transition-transform duration-200 shadow-[0_0_8px_#34d399]";
-        angleStatus.innerText = "ระนาบสมดุลดีเยี่ยม (Safe Zone)";
-        angleStatus.className = "text-xs font-semibold text-emerald-400 mt-2";
+    // Logic การนับจากองศา
+    if (relativeAngle > 3) {
+        if (!isAngleMoving) {
+            isAngleMoving = true;
+            processCompression();
+        }
+        angleValue.className = "text-5xl font-black text-rose-500";
+        angleStatus.innerText = "ตรวจพบการเคลื่อนไหว (นับแล้ว)";
     } else {
-        angleValue.className = "text-5xl font-black text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]";
-        angleIndicator.className = "w-1 h-6 bg-orange-500 absolute rounded-full origin-center transition-transform duration-200 shadow-[0_0_8px_#f97316]";
-        angleStatus.innerText = "เครื่องเอียงเกิน 3 องศา! กรุณาวางให้ราบ";
-        angleStatus.className = "text-xs font-semibold text-orange-400 mt-2";
+        isAngleMoving = false;
+        angleValue.className = "text-5xl font-black text-emerald-400";
+        angleStatus.innerText = "ระนาบปกติ (Safe Zone)";
     }
 }
 
-function handleMotion(event) {
-    if (!isRunning) return;
-    let acc = event.acceleration || {};
-    let x = acc.x; let y = acc.y; let z = acc.z;
-    if (x === null || y === null || z === null) {
-        let accG = event.accelerationIncludingGravity || {};
-        x = accG.x || 0; y = accG.y || 0; z = (accG.z || 9.8) - 9.8; 
-    }
-    let currentTotalForce = Math.sqrt(x*x + y*y + z*z);
-    let deltaForce = Math.abs(currentTotalForce - lastTotalForce);
+function processCompression() {
+    let now = Date.now();
+    totalCount++;
+    totalCompressions.innerText = totalCount;
 
-    if (deltaForce > ACCEL_DELTA_THRESHOLD) {
-        if (!isPeak) {
-            isPeak = true;
-            let now = Date.now();
-            if (lastTapTime > 0) {
-                let timeDiff = now - lastTapTime;
-                if (timeDiff > DEBOUNCE_TIME) {
-                    let calculatedBPM = Math.round(60000 / timeDiff);
-                    if (calculatedBPM >= 30 && calculatedBPM <= 400) {
-                        updateBPMUI(calculatedBPM);
-                        totalCount++;
-                        totalCompressions.innerText = totalCount;
-                        lastTapTime = now;
-                        if (calculatedBPM > maxBPMRecorded) maxBPMRecorded = calculatedBPM;
-                    }
-                }
-            } else { lastTapTime = now; }
+    if (lastTapTime > 0) {
+        let timeDiff = now - lastTapTime;
+        if (timeDiff > DEBOUNCE_TIME) {
+            let calculatedBPM = Math.round(60000 / timeDiff);
+            if (calculatedBPM >= 30 && calculatedBPM <= 400) {
+                updateBPMUI(calculatedBPM);
+                if (calculatedBPM > maxBPMRecorded) maxBPMRecorded = calculatedBPM;
+            }
         }
-    } else if (deltaForce < (ACCEL_DELTA_THRESHOLD * 0.5)) { isPeak = false; }
-    lastTotalForce = currentTotalForce;
+    }
+    lastTapTime = now;
 }
 
 function updateBPMUI(bpm) {
     const bpmTopBar = document.getElementById('bpm-top-bar');
     bpmValue.innerText = bpm;
-    
     if (bpm >= 100 && bpm <= 120) {
-        bpmValue.className = "text-6xl font-black text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.3)] animate-pulse";
-        bpmBar.className = "bg-emerald-400 h-full rounded-full transition-all duration-300"; bpmBar.style.width = "100%";
-        bpmTopBar.className = "absolute top-0 left-0 w-full h-1 bg-emerald-500 shadow-[0_2px_10px_rgba(52,211,153,0.5)]";
-        bpmStatus.innerText = "ความเร็วเยี่ยม! อยู่ในเกณฑ์มาตรฐานสากล 100-120"; bpmStatus.className = "text-xs font-semibold text-emerald-400 mt-2";
+        bpmValue.className = "text-6xl font-black text-emerald-400 animate-pulse";
+        bpmBar.style.width = "100%";
+        bpmStatus.innerText = "ความเร็วเยี่ยม! 100-120 BPM";
     } else if (bpm < 100) {
-        bpmValue.className = "text-6xl font-black text-sky-400 drop-shadow-[0_0_10px_rgba(56,189,248,0.3)]";
-        bpmBar.className = "bg-sky-400 h-full rounded-full transition-all duration-300"; bpmBar.style.width = "55%";
-        bpmTopBar.className = "absolute top-0 left-0 w-full h-1 bg-sky-500 shadow-[0_2px_10px_rgba(56,189,248,0.5)]";
-        bpmStatus.innerText = "ความเร็วช้าเกินไปเล็กน้อย เพิ่มจังหวะอีกนิด"; bpmStatus.className = "text-xs font-semibold text-sky-400 mt-2";
+        bpmValue.className = "text-6xl font-black text-sky-400";
+        bpmBar.style.width = "55%";
+        bpmStatus.innerText = "เร็วไปหน่อย เพิ่มจังหวะอีกนิด";
     } else {
-        bpmValue.className = "text-6xl font-black text-rose-500 drop-shadow-[0_0_10px_rgba(244,63,94,0.3)]";
-        bpmBar.className = "bg-rose-500 h-full rounded-full transition-all duration-300"; bpmBar.style.width = "100%";
-        bpmTopBar.className = "absolute top-0 left-0 w-full h-1 bg-rose-500 shadow-[0_2px_10px_rgba(244,63,94,0.5)]";
-        bpmStatus.innerText = "ความเร็วรัวเกินไปแล้ว! ผ่อนจังหวะลงมาหน่อย"; bpmStatus.className = "text-xs font-semibold text-rose-400 mt-2";
+        bpmValue.className = "text-6xl font-black text-rose-500";
+        bpmBar.style.width = "100%";
+        bpmStatus.innerText = "เร็วเกินไป ผ่อนจังหวะลงมา";
     }
 }
+
 btnAction.addEventListener('click', () => { if (!isRunning) startTracking(); else stopTracking(); });
