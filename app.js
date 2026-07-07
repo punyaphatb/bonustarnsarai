@@ -183,7 +183,7 @@ let isCalibrated = false;
 let lastTotalForce = 0;
 let isPeak = false;
 
-const ACCEL_DELTA_THRESHOLD = 0.5; 
+const ACCEL_DELTA_THRESHOLD = 0.7; 
 const DEBOUNCE_TIME = 500;         
 
 const btnAction = document.getElementById('btn-action');
