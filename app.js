@@ -1,3 +1,13 @@
+// ประกาศตัวแปรเหล่านี้ไว้ด้านบนสุดของไฟล์ (นอกฟังก์ชัน handleMotion)
+let lastTotalForce = 0;
+let isPeak = false;
+let lastTapTime = 0;
+let totalCount = 0;
+let maxBPMRecorded = 0;
+
+// ตัวแปรที่เพิ่มเข้ามาใหม่เพื่อกรองสัญญาณ (Filter)
+let forceHistory = []; 
+const FILTER_WINDOW = 5; // เก็บค่า 5 รอบล่าสุดมาเฉลี่ยเพื่อลด Noise
 import { initializeApp } from "firebase/app";
 import { 
     getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
@@ -310,34 +320,79 @@ function handleOrientation(event) {
         angleStatus.className = "text-xs font-semibold text-orange-400 mt-2";
     }
 }
-
+//ความลึก 
 function handleMotion(event) {
     if (!isRunning) return;
+
     let acc = event.acceleration || {};
     let x = acc.x; let y = acc.y; let z = acc.z;
+
+    // แก้ไขจุดที่ 2: ปรับปรุงการคำนวณกรณีต้องใช้ accelerationIncludingGravity
     if (x === null || y === null || z === null) {
         let accG = event.accelerationIncludingGravity || {};
-        x = accG.x || 0; y = accG.y || 0; z = (accG.z || 9.8) - 9.8; 
+        // แทนที่จะลบ 9.8 แค่แกน Z ตรงๆ (ซึ่งจะเพี้ยนเวลาเอียงเครื่อง) 
+        // เราจะเอาค่าดิบมาคำนวณ แล้วค่อยไปหักลบเวกเตอร์รวมของแรงโน้มถ่วงในภายหลังแทน
+        x = accG.x || 0; 
+        y = accG.y || 0; 
+        z = accG.z || 9.8; 
     }
-    let currentTotalForce = Math.sqrt(x*x + y*y + z*z);
+
+    // คำนวณหาแรงรวมดิบ (Raw Total Force)
+    let rawTotalForce = Math.sqrt(x*x + y*y + z*z);
+
+    // แก้ไขจุดที่ 3: ใช้ Moving Average Filter เพื่อลดสัญญาณรบกวน (Noise)
+    forceHistory.push(rawTotalForce);
+    if (forceHistory.length > FILTER_WINDOW) {
+        forceHistory.shift(); // เอาค่าเก่าสุดออกเพื่อรักษาขนาดตารางกรองสัญญาณ
+    }
+    
+    // หาค่าเฉลี่ยของแรงเพื่อความนิ่ง
+    let currentTotalForce = forceHistory.reduce((sum, val) => sum + val, 0) / forceHistory.length;
+
+    // หักลบค่าแรงโน้มถ่วงมาตรฐาน (ประมาณ 9.8) หากใช้เซนเซอร์ที่รวมแรงโน้มถ่วงมา
+    if (acc.x === null) {
+        currentTotalForce = Math.abs(currentTotalForce - 9.8);
+    }
+
+    // คำนวณความต่างของแรงเมื่อเทียบกับรอบก่อนหน้า
     let deltaForce = Math.abs(currentTotalForce - lastTotalForce);
 
+    // ตรวจสอบเงื่อนไขการเกิด Peak (การกดลงไปหนักๆ)
     if (deltaForce > ACCEL_DELTA_THRESHOLD) {
         if (!isPeak) {
-            isPeak = true;
+            isPeak = true; // ล็อกไว้ไม่ให้นับซ้ำในสัญญาณระลอกเดียวกัน
             let now = Date.now();
+            
             if (lastTapTime > 0) {
                 let timeDiff = now - lastTapTime;
+                
                 if (timeDiff > DEBOUNCE_TIME) {
                     let calculatedBPM = Math.round(60000 / timeDiff);
+                    
                     if (calculatedBPM >= 30 && calculatedBPM <= 400) {
                         updateBPMUI(calculatedBPM);
                         totalCount++;
                         totalCompressions.innerText = totalCount;
                         lastTapTime = now;
-                        if (calculatedBPM > maxBPMRecorded) maxBPMRecorded = calculatedBPM;
+                        if (calculatedBPM > maxBPMRecorded) {
+                            maxBPMRecorded = calculatedBPM;
+                        }
                     }
                 }
+            } else {
+                // สำหรับการกดครั้งแรกสุดของระบบ
+                lastTapTime = now;
+            }
+        }
+    } else {
+        // แก้ไขจุดที่ 1: เมื่อแรงลดลงต่ำกว่า ACCEL_DELTA_THRESHOLD (ผ่านจุดสูงสุดไปแล้ว)
+        // จะรีเซ็ตค่ากลับมาเป็น false เพื่อเตรียมพร้อมรับแรงกระแทกในครั้งถัดไป
+        isPeak = false;
+    }
+
+    // บันทึกค่าแรงรวมรอบนี้ ไว้เปรียบเทียบในรอบถัดไป
+    lastTotalForce = currentTotalForce;
+}
             } else { lastTapTime = now; }
         }
     } else if (deltaForce < (ACCEL_DELTA_THRESHOLD * 0.5)) { isPeak = false; }
