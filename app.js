@@ -29,6 +29,37 @@ const angleStatus = document.getElementById('angle-status');
 const totalCompressions = document.getElementById('total-compressions');
 const timerText = document.getElementById('timer');
 
+const tabs = {
+    'tab-test': 'page-test',
+    'tab-dashboard': 'page-dashboard',
+    'tab-guide': 'page-guide',
+    'tab-criteria': 'page-criteria'
+};
+
+Object.keys(tabs).forEach(tabId => {
+    document.getElementById(tabId).addEventListener('click', () => {
+        // 1. ซ่อนทุกหน้า
+        Object.values(tabs).forEach(pageId => {
+            document.getElementById(pageId).classList.add('hidden');
+        });
+        
+        // 2. ปรับสไตล์ทุกปุ่ม Tab ให้เป็นค่าเริ่มต้น (สีเทา)
+        Object.keys(tabs).forEach(id => {
+            const btn = document.getElementById(id);
+            btn.classList.remove('bg-slate-800', 'text-amber-400');
+            btn.classList.add('text-slate-400');
+        });
+
+        // 3. แสดงหน้าที่เลือก
+        document.getElementById(tabs[tabId]).classList.remove('hidden');
+        
+        // 4. เปลี่ยนสไตล์ปุ่มที่กดให้เป็นสีทอง
+        const activeBtn = document.getElementById(tabId);
+        activeBtn.classList.add('bg-slate-800', 'text-amber-400');
+        activeBtn.classList.remove('text-slate-400');
+    });
+});
+
 // --- 1. AUTHENTICATION ---
 supabase.auth.onAuthStateChange((event, session) => {
     if (session) {
