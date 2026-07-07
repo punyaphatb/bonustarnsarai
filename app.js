@@ -178,6 +178,7 @@ let seconds = 0;
 let timerInterval;
 let maxBPMRecorded = 0;
 
+let initialGamma = 0;
 let initialBeta = 0;
 let isCalibrated = false;
 let lastTotalForce = 0;
@@ -276,23 +277,38 @@ btnSaveManual.addEventListener('click', async () => {
 // ฟังก์ชันประมวลผลเซนเซอร์คงเดิม (เสถียรแล้ว)
 function handleOrientation(event) {
     if (!isRunning) return;
-    let currentBeta = event.beta || 0; 
-    if (!isCalibrated) { initialBeta = currentBeta; isCalibrated = true; }
-    let relativeAngle = Math.round(currentBeta - initialBeta);
-    angleValue.innerText = Math.abs(relativeAngle) + "°";
-    angleIndicator.style.transform = `rotate(${relativeAngle}deg)`;
 
-    if (Math.abs(relativeAngle) <= 8) {
-    angleValue.className = "text-5xl font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]";
-    angleIndicator.className = "w-1 h-6 bg-emerald-400 absolute rounded-full origin-center transition-transform duration-200 shadow-[0_0_8px_#34d399]";
-    angleStatus.innerText = "มุมกดตั้งฉากได้ดีเยี่ยม (Safe Zone)";
-    angleStatus.className = "text-xs font-semibold text-emerald-400 mt-2";
-} else {
-    angleValue.className = "text-5xl font-black text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]";
-    angleIndicator.className = "w-1 h-6 bg-orange-500 absolute rounded-full origin-center transition-transform duration-200 shadow-[0_0_8px_#f97316]";
-    angleStatus.innerText = "เครื่องเอียงมากเกินไป กรุณาตั้งแขนให้ตรง";
-    angleStatus.className = "text-xs font-semibold text-orange-400 mt-2";
-}
+    // เปลี่ยนจาก beta ตัวเดียว เป็นการวัดความเอียงจากแนวระนาบ (0,0)
+    let currentBeta = event.beta || 0; // เอียงหน้า-หลัง
+    let currentGamma = event.gamma || 0; // เอียงซ้าย-ขวา
+
+    if (!isCalibrated) { 
+        initialBeta = currentBeta; 
+        initialGamma = currentGamma; // สมมติว่ามีตัวแปรนี้เพิ่มขึ้นมา
+        isCalibrated = true; 
+    }
+
+    // คำนวณความเบี่ยงเบนจากจุดเริ่มต้น (ใช้ทฤษฎีบทพีทาโกรัสเพื่อให้ได้มุมเอียงรวม)
+    let diffBeta = currentBeta - initialBeta;
+    let diffGamma = currentGamma - initialGamma;
+    let relativeAngle = Math.round(Math.sqrt(diffBeta * diffBeta + diffGamma * diffGamma));
+
+    angleValue.innerText = relativeAngle + "°";
+    // ปรับการหมุน indicator ให้ตอบสนองทั้งสองแกน (หรือจะเลือกหมุนตามแกนหลักก็ได้)
+    angleIndicator.style.transform = `rotate(${Math.atan2(diffGamma, diffBeta) * 180 / Math.PI}deg)`;
+
+    // ปรับเกณฑ์เป็น 3 องศา ตามที่ต้องการ
+    if (Math.abs(relativeAngle) <= 3) {
+        angleValue.className = "text-5xl font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]";
+        angleIndicator.className = "w-1 h-6 bg-emerald-400 absolute rounded-full origin-center transition-transform duration-200 shadow-[0_0_8px_#34d399]";
+        angleStatus.innerText = "ระนาบสมดุลดีเยี่ยม (Safe Zone)";
+        angleStatus.className = "text-xs font-semibold text-emerald-400 mt-2";
+    } else {
+        angleValue.className = "text-5xl font-black text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]";
+        angleIndicator.className = "w-1 h-6 bg-orange-500 absolute rounded-full origin-center transition-transform duration-200 shadow-[0_0_8px_#f97316]";
+        angleStatus.innerText = "เครื่องเอียงเกิน 3 องศา! กรุณาวางให้ราบ";
+        angleStatus.className = "text-xs font-semibold text-orange-400 mt-2";
+    }
 }
 
 function handleMotion(event) {
