@@ -1,13 +1,3 @@
-// ประกาศตัวแปรเหล่านี้ไว้ด้านบนสุดของไฟล์ (นอกฟังก์ชัน handleMotion)
-let lastTotalForce = 0;
-let isPeak = false;
-let lastTapTime = 0;
-let totalCount = 0;
-let maxBPMRecorded = 0;
-
-// ตัวแปรที่เพิ่มเข้ามาใหม่เพื่อกรองสัญญาณ (Filter)
-let forceHistory = []; 
-const FILTER_WINDOW = 5; // เก็บค่า 5 รอบล่าสุดมาเฉลี่ยเพื่อลด Noise
 import { initializeApp } from "firebase/app";
 import { 
     getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
@@ -18,25 +8,60 @@ import {
     query, where, orderBy, onSnapshot, doc, deleteDoc 
 } from "firebase/firestore";
 
-// 🛠️ วาง Firebase Config ของคุณตามปกติที่นี่
+// ==========================================
+// 🌐 GLOBAL VARIABLES & SENSOR CONFIG
+// ==========================================
+let lastTotalForce = 0;
+let isPeak = false;
+let lastTapTime = 0;
+let totalCount = 0;
+let maxBPMRecorded = 0;
+
+let forceHistory = []; 
+const FILTER_WINDOW = 5; // เก็บค่า 5 รอบล่าสุดมาเฉลี่ยเพื่อลด Noise
+
+let isRunning = false;
+let seconds = 0;
+let timerInterval;
+
+let initialGamma = 0;
+let initialBeta = 0;
+let isCalibrated = false;
+
+const ACCEL_DELTA_THRESHOLD = 0.7; 
+const DEBOUNCE_TIME = 250; // ⚡ แก้ไขจาก 1000 เป็น 250ms เพื่อให้ดักจับจังหวะความเร็ว 100-120 BPM ได้แม่นยำ
+
+// ==========================================
+// 🔥 FIREBASE CONFIGURATION
+// ==========================================
 const firebaseConfig = {
     apiKey: "AIzaSyB-FxoUZm3pMptXF6kJIvJJkzNZ63ZjYPA",
-  authDomain: "cpr-assistant-f0833.firebaseapp.com",
-  projectId: "cpr-assistant-f0833",
-  storageBucket: "cpr-assistant-f0833.firebasestorage.app",
-  messagingSenderId: "1062430162073",
-  appId: "1:1062430162073:web:95124e341f4b38fc020c08",
-  measurementId: "G-2YR19NHPBQ"
+    authDomain: "cpr-assistant-f0833.firebaseapp.com",
+    projectId: "cpr-assistant-f0833",
+    storageBucket: "cpr-assistant-f0833.firebasestorage.app",
+    messagingSenderId: "1062430162073",
+    appId: "1:1062430162073:web:95124e341f4b38fc020c08",
+    measurementId: "G-2YR19NHPBQ"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// DOM Elements
 const loginScreen = document.getElementById('login-screen');
 const registerScreen = document.getElementById('register-screen');
 const appScreen = document.getElementById('app-screen');
 const btnSaveManual = document.getElementById('btn-save-manual');
+const btnAction = document.getElementById('btn-action');
+const bpmValue = document.getElementById('bpm-value');
+const bpmBar = document.getElementById('bpm-bar');
+const bpmStatus = document.getElementById('bpm-status');
+const angleValue = document.getElementById('angle-value');
+const angleIndicator = document.getElementById('angle-indicator');
+const angleStatus = document.getElementById('angle-status');
+const totalCompressions = document.getElementById('total-compressions');
+const timerText = document.getElementById('timer');
 
 let currentUser = null;
 let unsubscribeDashboard = null;
@@ -85,7 +110,7 @@ onAuthStateChanged(auth, (user) => {
         registerScreen.classList.add('hidden');
         appScreen.classList.remove('hidden');
         switchTab('test');
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
         listenToUserDashboard(user.uid);
     } else {
         currentUser = null;
@@ -109,12 +134,14 @@ const tabs = {
 };
 
 Object.keys(tabs).forEach(key => {
-    tabs[key].btn.addEventListener('click', () => switchTab(key));
+    if(tabs[key].btn) {
+        tabs[key].btn.addEventListener('click', () => switchTab(key));
+    }
 });
 
-// ค้นหาฟังก์ชัน switchTab เดิมใน app.js แล้วแทนที่ด้วยตัวนี้ (เพื่อสลับแท็บให้สีเปลี่ยนสวยงาม)
 function switchTab(targetKey) {
     Object.keys(tabs).forEach(key => {
+        if (!tabs[key].btn || !tabs[key].page) return;
         if (key === targetKey) {
             tabs[key].btn.className = "py-2.5 rounded-xl bg-slate-800 text-amber-400 shadow-md transition-all flex flex-col items-center gap-1";
             tabs[key].page.classList.remove('hidden');
@@ -133,11 +160,17 @@ function listenToUserDashboard(uid) {
     unsubscribeDashboard = onSnapshot(q, (snapshot) => {
         const listContainer = document.getElementById('dashboard-list');
         const emptyMsg = document.getElementById('dashboard-empty-msg');
-        document.getElementById('session-count').innerText = `${snapshot.size} รายการ`;
+        if (document.getElementById('session-count')) {
+            document.getElementById('session-count').innerText = `${snapshot.size} รายการ`;
+        }
+        if (!listContainer) return;
         listContainer.innerHTML = '';
 
-        if (snapshot.empty) { emptyMsg.classList.remove('hidden'); listContainer.appendChild(emptyMsg); return; }
-        emptyMsg.classList.add('hidden');
+        if (snapshot.empty) { 
+            if (emptyMsg) { emptyMsg.classList.remove('hidden'); listContainer.appendChild(emptyMsg); }
+            return; 
+        }
+        if (emptyMsg) emptyMsg.classList.add('hidden');
 
         snapshot.forEach((docSnapshot) => {
             const data = docSnapshot.data();
@@ -168,7 +201,7 @@ function listenToUserDashboard(uid) {
         document.querySelectorAll('.btn-delete').forEach(button => {
             button.addEventListener('click', () => deleteSessionLog(button.getAttribute('data-id')));
         });
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     });
 }
 
@@ -181,32 +214,6 @@ async function deleteSessionLog(id) {
 // ==========================================
 // 🏎️ SENSOR TRACKING CORE (WITH MANUAL SAVE)
 // ==========================================
-let isRunning = false;
-let totalCount = 0;
-let lastTapTime = 0;
-let seconds = 0;
-let timerInterval;
-let maxBPMRecorded = 0;
-
-let initialGamma = 0;
-let initialBeta = 0;
-let isCalibrated = false;
-let lastTotalForce = 0;
-let isPeak = false;
-
-const ACCEL_DELTA_THRESHOLD = 0.7; 
-const DEBOUNCE_TIME = 1000;         
-
-const btnAction = document.getElementById('btn-action');
-const bpmValue = document.getElementById('bpm-value');
-const bpmBar = document.getElementById('bpm-bar');
-const bpmStatus = document.getElementById('bpm-status');
-const angleValue = document.getElementById('angle-value');
-const angleIndicator = document.getElementById('angle-indicator');
-const angleStatus = document.getElementById('angle-status');
-const totalCompressions = document.getElementById('total-compressions');
-const timerText = document.getElementById('timer');
-
 async function requestSensorPermission() {
     if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         try { const permissionState = await DeviceOrientationEvent.requestPermission(); return permissionState === 'granted'; } catch (e) { return false; }
@@ -221,10 +228,10 @@ async function startTracking() {
     isRunning = true; isCalibrated = false; 
     btnAction.innerHTML = `<i data-lucide="square" fill="currentColor" class="w-5 h-5"></i> หยุดการทดสอบ`;
     btnAction.classList.replace('bg-amber-600', 'bg-red-600');
-    btnSaveManual.classList.add('hidden'); // ซ่อนปุ่มเซฟไว้ตอนกำลังวิ่งเทสอยู่
-    lucide.createIcons();
+    if (btnSaveManual) btnSaveManual.classList.add('hidden');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 
-    totalCount = 0; seconds = 0; lastTapTime = 0; lastTotalForce = 0; maxBPMRecorded = 0; isPeak = false;
+    totalCount = 0; seconds = 0; lastTapTime = 0; lastTotalForce = 0; maxBPMRecorded = 0; isPeak = false; forceHistory = [];
     totalCompressions.innerText = "0"; timerText.innerText = "00:00"; bpmValue.innerText = "0"; bpmBar.style.width = "0%";
     bpmStatus.innerText = "กำลังทดสอบ...";
 
@@ -243,71 +250,66 @@ function stopTracking() {
     isRunning = false;
     btnAction.innerHTML = `<i data-lucide="play" fill="currentColor" class="w-5 h-5"></i> เริ่มการทดสอบความไวสูง`;
     btnAction.classList.replace('bg-red-600', 'bg-amber-600');
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 
     clearInterval(timerInterval);
     window.removeEventListener('deviceorientation', handleOrientation);
     window.removeEventListener('devicemotion', handleMotion);
 
-    // 🟢 แสดงปุ่มเซฟแบบเลือกเองแทนการอัปโหลดอัตโนมัติ (Manual Save Trigger)
     if (totalCount > 0) {
-        btnSaveManual.classList.remove('hidden');
+        if (btnSaveManual) btnSaveManual.classList.remove('hidden');
         bpmStatus.innerText = `การทดสอบหยุดแล้ว สรุปผลปั๊มได้ ${totalCount} ครั้ง (Max BPM: ${maxBPMRecorded})`;
     } else {
         bpmStatus.innerText = "การทดสอบสิ้นสุด (ไม่มีข้อมูลการปั๊มจับค่าได้)";
     }
 }
 
-// 💾 ฟังปุ่มกดบันทึกแบบเลือกเอง (Manual Save)
-btnSaveManual.addEventListener('click', async () => {
-    if (!currentUser || totalCount === 0) return;
-    btnSaveManual.disabled = true;
-    btnSaveManual.innerText = "กำลังอัปโหลดส่งคลาวด์...";
-    try {
-        await addDoc(collection(db, "cpr_sessions"), {
-            userId: currentUser.uid,
-            userEmail: currentUser.email,
-            userName: currentUser.displayName || 'User',
-            totalCompressions: totalCount,
-            durationSeconds: seconds,
-            maxBPM: maxBPMRecorded,
-            createdAt: serverTimestamp()
-        });
-        alert("บันทึกสถิติลงแดชบอร์ดสำเร็จเรียบร้อยแล้ว!");
-        btnSaveManual.classList.add('hidden'); // ซ่อนปุ่มไปหลังจากเซฟเสร็จแล้ว
-    } catch (e) { 
-        alert("บันทึกผิดพลาด: " + e.message); 
-    } finally {
-        btnSaveManual.disabled = false;
-        btnSaveManual.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> บันทึกผลการทดสอบรอบนี้ลงคลาวด์`;
-        lucide.createIcons();
-    }
-});
+if (btnSaveManual) {
+    btnSaveManual.addEventListener('click', async () => {
+        if (!currentUser || totalCount === 0) return;
+        btnSaveManual.disabled = true;
+        btnSaveManual.innerText = "กำลังอัปโหลดส่งคลาวด์...";
+        try {
+            await addDoc(collection(db, "cpr_sessions"), {
+                userId: currentUser.uid,
+                userEmail: currentUser.email,
+                userName: currentUser.displayName || 'User',
+                totalCompressions: totalCount,
+                durationSeconds: seconds,
+                maxBPM: maxBPMRecorded,
+                createdAt: serverTimestamp()
+            });
+            alert("บันทึกสถิติลงแดชบอร์ดสำเร็จเรียบร้อยแล้ว!");
+            btnSaveManual.classList.add('hidden');
+        } catch (e) { 
+            alert("บันทึกผิดพลาด: " + e.message); 
+        } finally {
+            btnSaveManual.disabled = false;
+            btnSaveManual.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> บันทึกผลการทดสอบรอบนี้ลงคลาวด์`;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    });
+}
 
-// ฟังก์ชันประมวลผลเซนเซอร์คงเดิม (เสถียรแล้ว)
 function handleOrientation(event) {
     if (!isRunning) return;
 
-    // เปลี่ยนจาก beta ตัวเดียว เป็นการวัดความเอียงจากแนวระนาบ (0,0)
-    let currentBeta = event.beta || 0; // เอียงหน้า-หลัง
-    let currentGamma = event.gamma || 0; // เอียงซ้าย-ขวา
+    let currentBeta = event.beta || 0; 
+    let currentGamma = event.gamma || 0; 
 
     if (!isCalibrated) { 
         initialBeta = currentBeta; 
-        initialGamma = currentGamma; // สมมติว่ามีตัวแปรนี้เพิ่มขึ้นมา
+        initialGamma = currentGamma; 
         isCalibrated = true; 
     }
 
-    // คำนวณความเบี่ยงเบนจากจุดเริ่มต้น (ใช้ทฤษฎีบทพีทาโกรัสเพื่อให้ได้มุมเอียงรวม)
     let diffBeta = currentBeta - initialBeta;
     let diffGamma = currentGamma - initialGamma;
     let relativeAngle = Math.round(Math.sqrt(diffBeta * diffBeta + diffGamma * diffGamma));
 
     angleValue.innerText = relativeAngle + "°";
-    // ปรับการหมุน indicator ให้ตอบสนองทั้งสองแกน (หรือจะเลือกหมุนตามแกนหลักก็ได้)
     angleIndicator.style.transform = `rotate(${Math.atan2(diffGamma, diffBeta) * 180 / Math.PI}deg)`;
 
-    // ปรับเกณฑ์เป็น 3 องศา ตามที่ต้องการ
     if (Math.abs(relativeAngle) <= 3) {
         angleValue.className = "text-5xl font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]";
         angleIndicator.className = "w-1 h-6 bg-emerald-400 absolute rounded-full origin-center transition-transform duration-200 shadow-[0_0_8px_#34d399]";
@@ -320,47 +322,38 @@ function handleOrientation(event) {
         angleStatus.className = "text-xs font-semibold text-orange-400 mt-2";
     }
 }
-//ความลึก 
+
 function handleMotion(event) {
     if (!isRunning) return;
 
     let acc = event.acceleration || {};
     let x = acc.x; let y = acc.y; let z = acc.z;
 
-    // แก้ไขจุดที่ 2: ปรับปรุงการคำนวณกรณีต้องใช้ accelerationIncludingGravity
     if (x === null || y === null || z === null) {
         let accG = event.accelerationIncludingGravity || {};
-        // แทนที่จะลบ 9.8 แค่แกน Z ตรงๆ (ซึ่งจะเพี้ยนเวลาเอียงเครื่อง) 
-        // เราจะเอาค่าดิบมาคำนวณ แล้วค่อยไปหักลบเวกเตอร์รวมของแรงโน้มถ่วงในภายหลังแทน
         x = accG.x || 0; 
         y = accG.y || 0; 
         z = accG.z || 9.8; 
     }
 
-    // คำนวณหาแรงรวมดิบ (Raw Total Force)
     let rawTotalForce = Math.sqrt(x*x + y*y + z*z);
 
-    // แก้ไขจุดที่ 3: ใช้ Moving Average Filter เพื่อลดสัญญาณรบกวน (Noise)
     forceHistory.push(rawTotalForce);
     if (forceHistory.length > FILTER_WINDOW) {
-        forceHistory.shift(); // เอาค่าเก่าสุดออกเพื่อรักษาขนาดตารางกรองสัญญาณ
+        forceHistory.shift(); 
     }
     
-    // หาค่าเฉลี่ยของแรงเพื่อความนิ่ง
     let currentTotalForce = forceHistory.reduce((sum, val) => sum + val, 0) / forceHistory.length;
 
-    // หักลบค่าแรงโน้มถ่วงมาตรฐาน (ประมาณ 9.8) หากใช้เซนเซอร์ที่รวมแรงโน้มถ่วงมา
     if (acc.x === null) {
         currentTotalForce = Math.abs(currentTotalForce - 9.8);
     }
 
-    // คำนวณความต่างของแรงเมื่อเทียบกับรอบก่อนหน้า
     let deltaForce = Math.abs(currentTotalForce - lastTotalForce);
 
-    // ตรวจสอบเงื่อนไขการเกิด Peak (การกดลงไปหนักๆ)
     if (deltaForce > ACCEL_DELTA_THRESHOLD) {
         if (!isPeak) {
-            isPeak = true; // ล็อกไว้ไม่ให้นับซ้ำในสัญญาณระลอกเดียวกัน
+            isPeak = true; 
             let now = Date.now();
             
             if (lastTapTime > 0) {
@@ -380,22 +373,13 @@ function handleMotion(event) {
                     }
                 }
             } else {
-                // สำหรับการกดครั้งแรกสุดของระบบ
                 lastTapTime = now;
             }
         }
     } else {
-        // แก้ไขจุดที่ 1: เมื่อแรงลดลงต่ำกว่า ACCEL_DELTA_THRESHOLD (ผ่านจุดสูงสุดไปแล้ว)
-        // จะรีเซ็ตค่ากลับมาเป็น false เพื่อเตรียมพร้อมรับแรงกระแทกในครั้งถัดไป
         isPeak = false;
     }
 
-    // บันทึกค่าแรงรวมรอบนี้ ไว้เปรียบเทียบในรอบถัดไป
-    lastTotalForce = currentTotalForce;
-}
-            } else { lastTapTime = now; }
-        }
-    } else if (deltaForce < (ACCEL_DELTA_THRESHOLD * 0.5)) { isPeak = false; }
     lastTotalForce = currentTotalForce;
 }
 
@@ -406,18 +390,21 @@ function updateBPMUI(bpm) {
     if (bpm >= 100 && bpm <= 120) {
         bpmValue.className = "text-6xl font-black text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.3)] animate-pulse";
         bpmBar.className = "bg-emerald-400 h-full rounded-full transition-all duration-300"; bpmBar.style.width = "100%";
-        bpmTopBar.className = "absolute top-0 left-0 w-full h-1 bg-emerald-500 shadow-[0_2px_10px_rgba(52,211,153,0.5)]";
+        if (bpmTopBar) bpmTopBar.className = "absolute top-0 left-0 w-full h-1 bg-emerald-500 shadow-[0_2px_10px_rgba(52,211,153,0.5)]";
         bpmStatus.innerText = "ความเร็วเยี่ยม! อยู่ในเกณฑ์มาตรฐานสากล 100-120"; bpmStatus.className = "text-xs font-semibold text-emerald-400 mt-2";
     } else if (bpm < 100) {
         bpmValue.className = "text-6xl font-black text-sky-400 drop-shadow-[0_0_10px_rgba(56,189,248,0.3)]";
         bpmBar.className = "bg-sky-400 h-full rounded-full transition-all duration-300"; bpmBar.style.width = "55%";
-        bpmTopBar.className = "absolute top-0 left-0 w-full h-1 bg-sky-500 shadow-[0_2px_10px_rgba(56,189,248,0.5)]";
+        if (bpmTopBar) bpmTopBar.className = "absolute top-0 left-0 w-full h-1 bg-sky-500 shadow-[0_2px_10px_rgba(56,189,248,0.5)]";
         bpmStatus.innerText = "ความเร็วช้าเกินไปเล็กน้อย เพิ่มจังหวะอีกนิด"; bpmStatus.className = "text-xs font-semibold text-sky-400 mt-2";
     } else {
         bpmValue.className = "text-6xl font-black text-rose-500 drop-shadow-[0_0_10px_rgba(244,63,94,0.3)]";
         bpmBar.className = "bg-rose-500 h-full rounded-full transition-all duration-300"; bpmBar.style.width = "100%";
-        bpmTopBar.className = "absolute top-0 left-0 w-full h-1 bg-rose-500 shadow-[0_2px_10px_rgba(244,63,94,0.5)]";
+        if (bpmTopBar) bpmTopBar.className = "absolute top-0 left-0 w-full h-1 bg-rose-500 shadow-[0_2px_10px_rgba(244,63,94,0.5)]";
         bpmStatus.innerText = "ความเร็วรัวเกินไปแล้ว! ผ่อนจังหวะลงมาหน่อย"; bpmStatus.className = "text-xs font-semibold text-rose-400 mt-2";
     }
 }
-btnAction.addEventListener('click', () => { if (!isRunning) startTracking(); else stopTracking(); });
+
+if (btnAction) {
+    btnAction.addEventListener('click', () => { if (!isRunning) startTracking(); else stopTracking(); });
+}
